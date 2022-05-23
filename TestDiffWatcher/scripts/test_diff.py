@@ -8,21 +8,14 @@ import traceback
 import os
 import sys
 
-try:
-    prev_dir = os.getcwd()
-    script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
-    os.chdir(script_loc_dir)
-    from confluence_and_html_functions import *
-    from mail import *
-    from amf_jenkins_git_functions import getCommitHistory
-    os.chdir(prev_dir)
-except:
-    print('Could not import necessary confluence and HTML functions from confluence_and_html_functions.py')
-    traceback.print_exc()
-    sys.exit(2)
+script_loc_dir = os.path.split(os.path.realpath(__file__))[0]
+if script_loc_dir not in sys.path:  sys.path.append(script_loc_dir)
+from confluence_and_html_functions import *
+from mail import send_email_from_bot
+from repository_git_functions import getCommitHistory
 
 #for graphing
-import matplotlib.pyplot as plt #external install
+import matplotlib.pyplot as plt #pip install matplotlib
 
 #for image exporting
 import io
@@ -32,12 +25,8 @@ import time
 #-----------------------------------------------------------------------------
 # Globals
 
-CONFLUENCE_PARENT_LINK = "https://confluence.com/pages/viewpage.action?pageId="
+CONFLUENCE_PARENT_LINK = "https://iffysconfluence.atlassian.net/wiki/plugins/viewsource/viewpagesrc.action?pageId="
 
-# OS PLATFORM, retruns 'Windows', 'Linux' etc.
-PLATFORM = platform.system()
-MAXIMATOR_EMAIL='user@mail.com'
-COMMIT_HISTORY_DIX = getCommitHistory()
 
 def print_if_true(bool, text=None, texts=None):
     if bool:
@@ -80,6 +69,7 @@ def set_author_in_soup(author, info_table_soup):
     raise Exception('Author field was never found in info table for setting')
 
     return changes_made
+
 
 def getHTMLHeader():
     header = '<head><title></title>'
@@ -209,24 +199,22 @@ def areTestResultsSame(test1_info, test2_info):
 
 def areThereFailures(test_info):
     #returns true if there are failures for the current row
-    if test_info['total'] != test_info['passed']:
-        return True
-    else:
-        return False
+    return (test_info['failed'] != 0 or test_info['skipped'] != 0 or test_info['total'] != test_info['passed'])
 
 def getReason(test1_info, test2_info):
-    #we know there's a difference we want to return if its an improvement or regression
-    test2_failures=areThereFailures(test2_info)
-    test1_failures=areThereFailures(test1_info)
 
+    current_all_passing = not areThereFailures(test1_info)
+    previous_all_passing = not areThereFailures(test2_info)
+
+    #we know there's a difference we want to return if its an improvement or regression
     cur_total = test1_info['total']
     cur_passed = test1_info['passed']
     prev_total = test2_info['total']
     prev_passed = test2_info['passed']
 
     if cur_passed > prev_passed:
-        if cur_total == cur_passed:
-            if prev_total == prev_passed:
+        if current_all_passing:
+            if previous_all_passing:
                 #no failures for current test and previous test
                 #we just added new tests
                 return 'Tests Addition'
@@ -239,7 +227,7 @@ def getReason(test1_info, test2_info):
 
     elif cur_passed < prev_passed:
         if cur_total < prev_total:
-            if cur_passed == cur_total:
+            if current_all_passing:
                 #less tests in current cl but all the tests passed
                 return 'Tests Reduction'
             else:
@@ -249,7 +237,7 @@ def getReason(test1_info, test2_info):
             #regression for every other case
             return 'Regression'
     else:
-        return 'Equal'
+        return 'Other'
 
 
 def compareTableInfo(current_cl, current_table_html, previous_cl, previous_table_html):
@@ -315,7 +303,7 @@ def compareTableInfo(current_cl, current_table_html, previous_cl, previous_table
 
         #also check for missing tests for every test we parse
         #missing tests are tests that were not run on current cl
-        if not any( c_test['name'] == p_test['name'] for c_test in current_tests ):
+        if not any( p_test['name'] == c_test['name'] for c_test in current_tests):
             compare_info['missing_tests'].append(p_test['name'])
 
     #now go through to get new tests and differing tests
@@ -595,7 +583,7 @@ def graph_test(test_info,
         People can see if they introduced an error, because passed will go down
         """
         #can only be done if total value is the same for full range
-        ref_total = total[len(total)-1]
+        ref_total = total[-1]
         not_total = list(filter(
             lambda total_point : total_point != ref_total,
             total))
@@ -886,7 +874,7 @@ def gen_general_info_html(compareInfo, hash_info, previousAvail):
         html += htmlnewl
 
     #also add a link to its confluence page
-    results_link = make_hyperlink('{}{}'.format(CONFLUENCE_PARENT_LINK, get_confl_pageid(NODE)), text=get_confl_pagetitle(NODE))
+    results_link = make_hyperlink(get_confl_page_link(NODE), text=get_confl_pagetitle(NODE))
     html += styleTextIn('Test History: '+results_link, 'h3')
 
     return html
@@ -983,7 +971,25 @@ def gen_differing_tests_html(differing_tests, graphed_tests, graphInfo):
 
     html = styleTextIn('Differing Tests', 'h2')
 
-    for diff_element in differing_tests:
+    # we want the differing tests to be ordered in a particular way
+    # the ones with failures first
+
+    # regressions , other, improvements, fixes, tests additions and reductions
+
+    ordered_diff_reasons = [ 'Regression', 'Other', 'Improvement', 'Fix']
+    ordered_diff_elements = []
+
+    # filter the differing tests list for the type of diff in the order we want them
+    for diff_reason in ordered_diff_reasons:
+        ordered_diff_elements = ordered_diff_elements + list(filter(lambda x : x['diff_reason'] == diff_reason, differing_tests))
+
+    # then put any other type of diff element at the end of the ordered list
+    ordered_diff_elements = ordered_diff_elements + list(filter(lambda x : x['diff_reason'] not in ordered_diff_reasons, differing_tests))
+
+    if len(ordered_diff_elements) != len(differing_tests):
+        raise Exception('Mismatch between differing tests and ordered differing elements!')
+
+    for diff_element in ordered_diff_elements:
         test_name = diff_element['test_name']
 
         test_info_table, test_results_table = genDiffResultsTableForTest(diff_element)
@@ -1155,7 +1161,9 @@ def handleDifferences(compareInfo, commit_history, graphInfo):
     if is_different and (current_cl in commit_history['hashinfo']):
         #only send email if there are changes in the results
         if not TESTING:
-            main_recipient = commit_history['hashinfo'][current_cl]['author_email']
+            # Since emails are autogenerated we wont be using the author email as they are all fakes
+            # main_recipient = commit_history['hashinfo'][current_cl]['author_email']
+            main_recipient = main_recipient
         else:
             #testing mode does not send email to commit author
             print('========> MAIN RECIPIENT HAS BEEN CHANGED TO {} SINCE IN TESTING <======'.format(main_recipient))
@@ -1166,142 +1174,128 @@ def handleDifferences(compareInfo, commit_history, graphInfo):
 
     if send_email:
         if main_recipient is not None:
-            try:
-                print('Sending Email to {}...'.format(main_recipient))
-                send_email_from_farm( fullhtml, email_subject, main_recipient, RECIPIENTS, content="html", files=attachments)
-                print('Email Sent!')
-            except Exception as e:
-                raise Exception('Error sending email:\nsend_text(): \n'+str(e))
+            print('Sending Email to {}...'.format(main_recipient))
+            send_email_from_bot( fullhtml, email_subject, main_recipient, RECIPIENTS, content="html", files=attachments)
+            print('Email Sent!')
         else:
-            raise Exception('No recipient specified! Use -recipients argument')
+            print('No recipient specified! Use -emailto argument')
     else:
         print('Email Not Sent')
 
-    if (SAVE_HTML != ''):
+    if SAVE_HTML:
         with open(SAVE_HTML, 'w') as file:
             file.write(fullhtml)
         print('=================> HTML saved to '+SAVE_HTML+' <===========================')
     else:
         print("Run script with arguments '--testing -save_html <file_name>' to save generated HTML as 'file_name'")
 
-def findDifferences(latest_cl, latest_link, table, confluence_cls, confluence_soup):
+def findDifferences(confluence_cl, confluence_cls, confluence_soup):
     #use the commit history to, to find the commit before
-    commit_history = COMMIT_HISTORY_DIX
+    commit_history = getCommitHistory()
 
     hash_list = commit_history['hashes']
     hash_info = commit_history['hashinfo']
 
-    
-    prevCommitFound=False
+    #cls/commits between the current cl (confluence_cl) and the previous cl on the confluence page
+    cls_inbetween = []
+    historySearched = False # used to see if we could get the commits in between
 
-    #cls/commits between the first cl (latest_cl) and the second cl on the confluence page
-    cls_inbetween=[]
-    foundHash=''
-    historySearched=False
+    #comparing to the previous confluence cl before this one
+    previous_confluence_cl = None
 
-    if latest_cl in hash_list:
-        #we can find the commit history, if the current cl is in the list of hashes
+    try:
+        # confluence cls are ordered newest to oldest
+        # previous confluence cl should be one after the current cl
+        previous_confluence_cl = confluence_cls[confluence_cls.index(confluence_cl)+1]
+    except IndexError:
+        print('No last confluence result found')
+
+
+    if (confluence_cl in hash_list) and (previous_confluence_cl is not None) and (previous_confluence_cl in hash_list):
         print('Searching through history...')
-
-        #get the index of the current hash in list
-        index = hash_list.index(latest_cl)
-
-
-        #the first search begins at the last commit
-        #list is ordered from newest to oldest, so to find previous commits we ascend in the list
-        curSearchIndx=index+1
-        curhash=''
-
-        while (not prevCommitFound) and (curSearchIndx < len(hash_list)):
-            #get the curhash for this index
-            curhash = hash_list[curSearchIndx]
-            
-            #check if the curhash is in the CL list
-            if curhash in confluence_cls:
-                #then we have found one that was run
-                foundHash = curhash
-                prevCommitFound = True
-                print('Closest Commit On Confluence and in Commit History: '+str(foundHash))
-            else:
-                #this is not the one we are looking for so add it to clsinbetween
-                cls_inbetween.append(curhash)
-
-            curSearchIndx += 1
-
-        print('Search Complete')
-        historySearched=True
-
-    else:
-        #just get the last cl from the confluence page
-        print('Commit "'+latest_cl+'" was not in history, comparing to last confluence output')
-        try:
-            foundHash = confluence_cls[1]
-            prevCommitFound = True
-        except IndexError:
-            print('No last confluence output')
-            prevCommitFound = False
+        # both current and previous cl are in hash list
+        # trim the list to get the cls in between
+        historySearched = True
+        cls_inbetween = hash_list[ hash_list.index(confluence_cl)+1 : hash_list.index(previous_confluence_cl) ]
 
 
-    handle_diffs=False
+    previous_results_table = None
+    previous_job_link = None
 
-    if prevCommitFound:
-        #if we were able to find a commit, compare the tests output,
-        #get the test info and compare them
-        foundHashIndx = confluence_cls.index(foundHash)
-        
-        found_hash_table = get_results_table(foundHash, confluence_soup)
+    if previous_confluence_cl:
+        # get the results table and confluence link
+        previous_results_table = get_results_table( previous_confluence_cl, confluence_soup)
+        previous_job_link = get_project_link(previous_confluence_cl, confluence_soup)
 
-        #if there is any difference, then retrieve the info and send it out
-        compareInfo = compareTableInfo(latest_cl, table, foundHash, found_hash_table)
+    # if no previous confluence cl, this is the first post on confluence so nothing to compare to
 
-        if compareInfo['different'] or (len(compareInfo['failing_tests']) != 0):
-            #differences or failures should be handled
-            handle_diffs=True
+    results_table = get_results_table(confluence_cl, confluence_soup)
 
-        found_hash_link = get_project_link(foundHash, confluence_soup)
-        compareInfo['previous_job_link'] = str(found_hash_link)
+    compare_info = compareTableInfo(confluence_cl, results_table, previous_confluence_cl, previous_results_table)
 
-    else:
-        #if we are not able to find a commit, then handle this as a fresh commit
-        #ie no history for this noded
-        compareInfo = compareTableInfo(latest_cl, table, None, None)
-        handle_diffs=True
-        
+    # if there are differences or failures, then we should address them
+    handle_diffs = ( compare_info['different'] or len(compare_info['failing_tests'])>0 )
+
     if handle_diffs:
-        compareInfo['current_job_link'] = str(latest_link)
-        compareInfo['cls_inbetween'] = cls_inbetween
-        compareInfo['history_searched'] = historySearched
+        compare_info['current_job_link'] = get_project_link(confluence_cl, confluence_soup)
+        compare_info['previous_job_link'] = previous_job_link
+        compare_info['cls_inbetween'] = cls_inbetween
+        compare_info['history_searched'] = historySearched
+
         print('Generating graph info...') 
         graph_info = gen_graph_info(confluence_cls, confluence_soup, verbose=False, limit=30)
+
         print('Parsing Differences')
-        handleDifferences(compareInfo, commit_history, graph_info)
+        handleDifferences(compare_info, commit_history, graph_info)
+
         return 1
+
     else:
         print(NODE+' continues to pass all tests')
         return 0
 
-def commitDiff(auth, pageid):
-    # Use Beautiful Soup to parse the html and extract the information in the tables
+def diff_test_results(auth, node, commit=None, recipients=None, testing=False, save_html=None, testing_send_email=False):
+    init_global_vars( node=node, recipients=recipients, save_html=save_html, testing_send_email=testing_send_email, testing=testing)
+
     print('Getting Confluence Soup...')
-    confluence_soup = get_confluence_soup(auth, pageid)
+    confluence_soup = get_test_results_confluence_soup(auth, get_confl_pageid(node))
     
     confluence_cls = get_cls_from_soup(confluence_soup)
 
-    latest_cl = confluence_cls[0]
-    
-    latestResultTable = get_results_table(latest_cl, confluence_soup)
-    link = get_project_link(latest_cl, confluence_soup)
+    if len(confluence_cls) < 1:
+        print('No information to compare')
+        return 0
 
-    print('QUERYING COMMIT: "'+latest_cl+'" for "'+NODE+'"')
-    ret = findDifferences(latest_cl, link, latestResultTable, confluence_cls, confluence_soup)
-    #writing the confluence soup
+    if commit:
+        if commit not in confluence_cls:
+            raise Exception(f'Could not find {commit} on confluence')
+    else:
+        commit = confluence_cls[0]
+    
+    print(f'Querying commit {commit} for {NODE}')
+
+    ret = findDifferences(commit, confluence_cls, confluence_soup)
 
     return ret
+
+def init_global_vars(node=None, recipients=None, testing=False, testing_send_email=False, save_html=None):
+    if any( v not in globals() for v in ['TESTING', 'SEND_EMAIL', 'SAVE_HTML', 'NODE', 'RECIPIENTS']):
+        global TESTING
+        global SEND_EMAIL
+        global SAVE_HTML
+        global NODE
+        global RECIPIENTS
+
+        TESTING = testing
+        SEND_EMAIL = testing_send_email
+        SAVE_HTML = save_html
+
+        NODE = node
+        RECIPIENTS = []
+        if recipients: RECIPIENTS = recipients
     
 
 def main():
-
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -1313,15 +1307,15 @@ def main():
     )
 
     parser.add_argument(
-        "-runner",
+        "-commit",
         required=False,
         type = str,
-        metavar='<master or fileshare>',
-        help = "The node running this script"
+        metavar='<NodeName>',
+        help = "Commit to get information from"
     )
 
     parser.add_argument(
-        "-recipients",
+        "-emailto",
         required=False,
         type=str,
         metavar='<password>',
@@ -1351,32 +1345,32 @@ def main():
 
     TESTING = options.testing
     SEND_EMAIL = options.send_email
-    SAVE_HTML=''
+    SAVE_HTML= None
 
-    if options.save_html != None:
-        SAVE_HTML=str(options.save_html)
+    if options.save_html:
+        SAVE_HTML= options.save_html
         print('Generated HTML will be saved to {}'.format(SAVE_HTML))
 
     if TESTING:
         print('TESTING MODE')
         print('EMAIL SENDING: {}'.format('ENABLED' if SEND_EMAIL else 'DISABLED'))
     
-    NODE = str(options.node)
+    NODE = options.node
 
     try:
         auth = get_login(USER_NAME, None)
     except Exception as e:
         print('main(): Could not get login credentials from node for confluence:')
-        print('get_login(): '+str(e))
+        print('get_login(): {}'.format(e))
         return 2
 
     RECIPIENTS = []
-    if options.recipients is not None:
-        RECIPIENTS = str(options.recipients).split()
+    if options.emailto:
+        RECIPIENTS = options.emailto.split()
 
     #Find the html file name in the _results folder
     try:
-        return commitDiff(auth, get_confl_pageid(NODE))
+        return diff_test_results(auth, NODE, commit=options.commit)
     except:
         print("main(): Error Occured:")
         traceback.print_exc()

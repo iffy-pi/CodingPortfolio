@@ -17,14 +17,23 @@ USED BY POST_TO_CONFLUENCE(AND LUXSDK), TEST_DIFF and POST_TEST_EMAIL LUXSDK
 
 # Confluence REST API needs to know the title and pageid for a given page.
 # This map links a given node to its respective title and pageid on confluence
-# format: <Node Name>: [ <confluence page title, usually machine name>, <confluence page id> ]
+# format: <Jenkins Node Name>: [ <confluence page title, usually machine name>, <confluence page id> ]
 #get node information using get_confl_pagetitle() and get_confl_pageid() functions
 TESTNODE_CONFLUENCE_PAGES = {
-            "Win10_Navi10" : ["AMF-WIN10-NAVI10", 327418887],
+    'Win10_Navi21': [ 'WIN10-NAVI21', 294948 ]
 }
 
-BASE_URL = "https://confluence.com/rest/api/content"
-USER_NAME = "user"
+#based on personal confluence page, link: https://developer.atlassian.com/cloud/confluence/rest/intro/
+CONFLUENCE_BASE_URL = 'https://iffysconfluence.atlassian.net/wiki/rest/api/content'
+
+# authentication is based on the following
+# go to https://id.atlassian.com/manage-profile/security/api-tokens
+# generate the api token and store it
+# authentication is tuple of <email>, <api token>
+# e.g. auth = 'iffysbot@gmail.com', 'affef3d'
+# credentials are currently stored in windows credential manager
+CONFLUENCE_KEYRING = 'iffysconfluence.atlassian.net'
+USER_NAME = "iffysbot@gmail.com"
 
 def pprint(data):
     '''
@@ -36,13 +45,12 @@ def pprint(data):
         indent = 4,
         separators = (', ', ' : ')))
 
-
-def get_page_ancestors(auth, pageid):
+def get_page_ancestors(auth, pageid, base_url):
 
     # Get basic page information plus the ancestors property
 
     url = '{base}/{pageid}?expand=ancestors'.format(
-        base = BASE_URL,
+        base = base_url,
         pageid = pageid)
 
     r = requests.get(url, auth = auth)
@@ -52,10 +60,10 @@ def get_page_ancestors(auth, pageid):
     return r.json()['ancestors']
 
 
-def get_page_info(auth, pageid):
+def get_page_info(auth, pageid, base_url):
 
     url = '{base}/{pageid}'.format(
-        base = BASE_URL,
+        base = base_url,
         pageid = pageid)
 
     r = requests.get(url, auth = auth)
@@ -65,9 +73,9 @@ def get_page_info(auth, pageid):
     return r.json()
 
 
-def get_page_data(auth, pageid):
+def get_page_data(auth, pageid, base_url):
     url = '{base}/{pageid}?expand=body.storage'.format(
-        base = BASE_URL,
+        base = base_url,
         pageid = pageid
     )
     r = requests.get(url, auth = auth)
@@ -77,62 +85,76 @@ def get_page_data(auth, pageid):
     return r.json()
 
 def get_confl_pagetitle(node):
-    if node not in TESTNODE_CONFLUENCE_PAGES.keys():
+    if node not in TESTNODE_CONFLUENCE_PAGES:
         raise Exception('{} not in list of confluence pages, please add to TESTNODE_CONFLUENCE_PAGES'.format(node))
 
     return TESTNODE_CONFLUENCE_PAGES[node][0]
 
 def get_confl_pageid(node):
-    if node not in TESTNODE_CONFLUENCE_PAGES.keys():
+    if node not in TESTNODE_CONFLUENCE_PAGES:
         raise Exception('{} not in list of confluence pages, please add to TESTNODE_CONFLUENCE_PAGES'.format(node))
 
     return TESTNODE_CONFLUENCE_PAGES[node][1]
 
+def get_confl_page_link(node):
+    if node not in TESTNODE_CONFLUENCE_PAGES:
+        raise Exception('{} not in list of confluence pages, please add to TESTNODE_CONFLUENCE_PAGES'.format(node))
 
-def get_login(username, passwd=None):
-    '''
-    Looks in the keyring (credentials manager on Windows) for an already
-    exisiting entry. If the given username does not exist in the keyring,
-    it will prompt a password from the commandline. For this to work properly with
-    Jenkins, the credentials need to manually added for each node in the keyring
-    for Jenkins' username
-    Get the password for username out of the keyring.
-    '''
-    if passwd is not None:
-        return (username, passwd)
+    return f'https://iffysconfluence.atlassian.net/wiki/plugins/viewsource/viewpagesrc.action?pageId={TESTNODE_CONFLUENCE_PAGES[node][1]}'
 
-    passwd = keyring.get_password('confluence_script', username)
+def get_confl_auth():
+    passwd = keyring.get_password(CONFLUENCE_KEYRING, USER_NAME)
 
     if passwd is None:
-        raise Exception('Password could not be retrieved from keyring')
+        raise Exception(f'No {CONFLUENCE_KEYRING} credential was found in keyring, please use public_testing.py to save credentials')
 
-    return (username, passwd)
+    return USER_NAME, passwd
+
+def set_confl_auth(passwd):
+    
+    keyring.set_password(CONFLUENCE_KEYRING, USER_NAME, passwd)
+
+    #verification
+    stored_passwd =  keyring.get_password(CONFLUENCE_KEYRING, USER_NAME)
+
+    if stored_passwd is None or stored_passwd != passwd:
+        return 1
+    
+    return 0
+
+def get_login(username, passwd=None):
+    return get_confl_auth()
 
 def parse_html(htmlIn):
     return BeautifulSoup(str(htmlIn), 'html.parser')
 
-def get_raw_confluence_soup(auth, pageid):
-    current_confluence_html = get_page_data(auth, pageid)["body"]["storage"]["value"]
+def parse_html_file(file):
+    with open(file, 'r') as f:
+        return parse_html(f.read())
+
+def get_confluence_soup(auth, pageid, base_url):
+    current_confluence_html = get_page_data(auth, pageid, base_url)["body"]["storage"]["value"]
     return parse_html(current_confluence_html)
 
-def get_confluence_soup(auth, pageid):
+def get_test_results_confluence_soup(auth, pageid):
+    #gets the confluence soup for a page of test results
     #auth: authentication tuple (username, password)
     #pageid: pageid on amd confluence page
     #get the raw html soup
-    confluence_soup = get_raw_confluence_soup(auth, pageid)
+    confluence_soup = get_confluence_soup(auth, pageid, CONFLUENCE_BASE_URL)
     #populate the cl ids on the HTML tags for easy access
     populate_cl_ids(confluence_soup)
     return confluence_soup
 
 
-def write_confluence_soup(confluence_soup, auth, pageid, title):
+def write_confluence_soup(confluence_soup, auth, pageid, title, base_url=CONFLUENCE_BASE_URL):
     new_confluence_html = confluence_soup
 
     #write the combined html to the confluence page
-    confluence_info = get_page_info(auth, pageid)
+    confluence_info = get_page_info(auth, pageid, base_url)
     ver = int(confluence_info['version']['number']) + 1
 
-    ancestors = get_page_ancestors(auth, pageid)
+    ancestors = get_page_ancestors(auth, pageid, base_url)
 
     anc = ancestors[-1]
     del anc['_links']
@@ -159,7 +181,7 @@ def write_confluence_soup(confluence_soup, auth, pageid, title):
 
     data = json.dumps(data)
 
-    url = '{base}/{pageid}'.format(base = BASE_URL, pageid = pageid)
+    url = '{base}/{pageid}'.format(base = base_url, pageid = pageid)
 
     #print('Writing to Confluence Server...')
     r = requests.put(
@@ -252,11 +274,29 @@ def get_cls_from_soup(confluence_soup, ommit=[], unique=True, limit=None):
 
     return cl_list
 
-def get_results_table(cl, confluence_soup):
-    return confluence_soup.find_all(attrs={'id':cl+'_results_table'})[0]
+def get_results_table(cl, test_results_confluence_soup):
+    return test_results_confluence_soup.find_all(attrs={'id':cl+'_results_table'})[0]
 
-def get_info_table(cl, confluence_soup):
-    return confluence_soup.find_all(attrs={'id':cl+'_info_table'})[0]
+def get_info_table(cl, test_results_confluence_soup):
+    return test_results_confluence_soup.find_all(attrs={'id':cl+'_info_table'})[0]
+
+def get_tables_from_soup(test_results_confluence_soup, info_tables=False, results_tables=False):
+    if not (info_tables or results_tables):
+        raise Exception('No table type specified')
+
+    regex = None
+
+    if info_tables:
+        regex = '.*_info_table'
+
+    if results_tables:
+        regex = '{}{}'.format(f'{regex}|' if regex else '', '.*_results_table')
+
+    def is_table_type(html_id):
+        return html_id and re.compile(regex).search(html_id)
+
+    return test_results_confluence_soup.find_all(id=is_table_type)
+
 
 def parseHTMLRow(rowIn):
     parsed_row = []
@@ -441,7 +481,7 @@ def get_matching_rows_from_table_soup( table_soup, keys=None, keyset=None):
 def styleTextIn(text, marker):
     return '<'+marker+'>'+text+'</'+marker+'>'
 
-def make_html_color_cell(value, header=False, color=None, condition=False):
+def make_html_color_cell(value, header=False, color=None, otherwise_color=None, condition=False):
     #will wrap value in row cell html
     #if condition is true, it will add the specified color
     tag = 'td'
@@ -450,13 +490,19 @@ def make_html_color_cell(value, header=False, color=None, condition=False):
         tag = 'th'
 
     bg_color = ''
-    if (color is not None) and condition:
-        bg_color = ' bgcolor="{color}"'.format(color=color)
+
+    if condition:
+        #if the condition is true and we have a color then add the background color
+        if color: bg_color = f' bgcolor="{color}"'
+    else:
+        #condition is not met
+        #if we have otherwise color put that instead
+        if otherwise_color: bg_color = f' bgcolor="{otherwise_color}"'
 
     return '<{tag}{an_attr}>{value}</{tag}>'.format(an_attr=bg_color, value=value, tag=tag)
 
 def make_commit_link(cl):
-    return 'https://github.com/some/repository/commit/{cl}'.format(cl=cl)
+    return 'https://github.com/sample-repository/commit/{cl}'.format(cl=cl)
 
 def main():
     return
