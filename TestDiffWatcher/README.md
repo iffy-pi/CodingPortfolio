@@ -31,10 +31,14 @@ You can also use `public_testing.py` to view the test results page of the sample
 
 **You can test the script with the following:**
 Save the generated HTML to a file to view:
-`test_diff.py -node Win10_Navi21 -save_html file_address`
+```
+test_diff.py -node Win10_Navi21 -save_html file_address
+```
 
 Send the HTML in an email
-`test_diff.py -node Win10_Navi21 -emailto yourname@address.com`
+```
+test_diff.py -node Win10_Navi21 -emailto yourname@address.com
+```
 
 
 
