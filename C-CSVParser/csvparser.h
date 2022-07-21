@@ -63,25 +63,6 @@ int csv_cell_equals(struct csv_cell * cell1, struct csv_cell * cell2);
 int csv_row_equals(struct csv_row * row1, struct csv_row * row2);
 int csv_table_equals(struct csv_table * table1, struct csv_table * table2);
 
-/* Gets the index of the specified row/cell in the specified row/table */
-/* Done by comparing the values of the cell/row and returning index where values match */
-/* Returns -1 if no match */
-int get_cell_indx_in_csv_row(struct csv_row * row, struct csv_cell * cell);
-int get_row_indx_in_csv_table(struct csv_table * table, struct csv_row * row);
-/* takes pointers to row and column index coordinates, return value is -1 if no match */
-int get_cell_indx_in_csv_table(struct csv_table * table, struct csv_cell * cell, int * rowindx, int * colindx);
-
-/* Checks if the value of the specified cell/row is in the specified table/row list, returns TRUE if is */
-int is_cell_in_csv_row(struct csv_row * row, struct csv_cell * cell);
-int is_row_in_csv_table(struct csv_table * table, struct csv_row * row);
-int is_cell_in_csv_table(struct csv_table * table, struct csv_cell * cell);
-
-/* Checks if the cell/row ptr is in the specified table/row list, returns TRUE if is */
-// just a pointer comparison
-int is_cell_mapped_to_csv_row(struct csv_row * row, struct csv_cell * cellptr);
-int is_row_mapped_to_csv_table(struct csv_table * table, struct csv_row * rowptr);
-int is_cell_mapped_to_csv_table(struct csv_table * table, struct csv_cell * cellptr);
-
 /* Get pointer to cell or row at the specified index */
 struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row * row, int index);
 struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index);
@@ -96,6 +77,29 @@ struct csv_cell * get_cell_clone_in_csv_table(struct csv_table * table, int rowi
 struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row * row, char * string);
 struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table * table, char * string);
 
+/* Gets the index of the specified row/cell in the specified row/table */
+/* Done by comparing the values of the cell/row and returning index where values match */
+/* Returns -1 if no match */
+int get_cell_coord_in_csv_row(struct csv_row * row, struct csv_cell * cell);
+int get_row_coord_in_csv_table(struct csv_table * table, struct csv_row * row);
+/* takes pointers to row and column index coordinates, return value is -1 if no match */
+int get_cell_coord_in_csv_table(struct csv_table * table, struct csv_cell * cell, int * rowindx, int * colindx);
+
+/* Gets the coordinates of the cell that contains the specified string */
+int get_str_coord_in_csv_row(struct csv_row * row, char * string);
+int get_str_coord_in_csv_table(struct csv_table * table, char * string, int * rowindx, int * colindx);
+
+/* Checks if the cell/row ptr is in the specified table/row list, returns TRUE if is */
+// just a pointer comparison
+int is_cell_mapped_to_csv_row(struct csv_row * row, struct csv_cell * cellptr);
+int is_row_mapped_to_csv_table(struct csv_table * table, struct csv_row * rowptr);
+int is_cell_mapped_to_csv_table(struct csv_table * table, struct csv_cell * cellptr);
+
+/* Checks if the value of the specified cell/row is in the specified table/row list, returns TRUE if is */
+int is_cell_in_csv_row(struct csv_row * row, struct csv_cell * cell);
+int is_row_in_csv_table(struct csv_table * table, struct csv_row * row);
+int is_cell_in_csv_table(struct csv_table * table, struct csv_cell * cell);
+
 /* Checks if specified string is in the csv table, returns TRUE if match is found */
 int is_string_in_csv_row(struct csv_row * row, char * string);
 int is_string_in_csv_table(struct csv_table * table, char * string);
@@ -109,7 +113,7 @@ void add_cell_clone_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellpt
 void add_row_clone_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr);
 
 /* Create new cell with word and add it to row, uses deep copy for copying word */
-void add_word_to_csv_row(struct csv_row * rowptr, char * word, int wordlen);
+void add_str_to_csv_row(struct csv_row * rowptr, char * word, int wordlen);
 
 /* Unmap the specified cell/row ptr from its parent row/table */
 void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr);
