@@ -1,0 +1,29 @@
+Overview
+	 - What is the parser
+	 - What is the underlying structures used (heaps, linked list)
+	 - Why it was designed
+	 	- Because I needed something more simple to use, there are other CSV parsers
+	 	- But I struggled getting them to work simply,
+	 - Current limitations
+Tutorial
+	- The overlying structure for parsed CSV
+		- Table, row and cell
+	- Creating cell structures
+		- Creating cells, rows and tables
+	- Freeing cell structures
+		- freeing cells, rows and tables
+		- how it is recursive
+	- Parsing CSV files and strings
+	- Getting nested csv structures
+	- Extra:
+		- Comparing csv structures
+		- Combining CSV Cell structures
+		- Separating and Deleting CSV Cell Structures
+Examples
+	- Creating a CSV Structure from scratch
+	- Parsing CSV Structure with different parameters
+	- Multiple operations on a parsed csv structures
+Glossary
+	- Functional descriptions
+	- Printing cell structures
+
