@@ -1,0 +1,17 @@
+core
+*.o
+*.out
+*.ko
+*.dwo
+*.mod
+*.mod.c
+*.order
+*.symvers
+*.swp
+.*.swp
+
+# doc temp files
+~$*.docx
+*.tmp
+#vs code directory
+.vscode
