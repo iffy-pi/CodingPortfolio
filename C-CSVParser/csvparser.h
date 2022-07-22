@@ -140,13 +140,14 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 /* parse csv file and strings to csv table structure (linked list of csv rows) */
 /*
 	delim -> what should be used as the delimiter
-	ignore_spaces -> if TRUE, trims cell strings of trailing spaces
-	ignore_empty_cells -> if TRUE, any cells with empty string (after trimming) will not be put into returned structure
+	strip_spaces -> if TRUE, trims cell strings of trailing spaces
+	discard_empty_cells -> if TRUE, any cells with empty string (after trimming) will not be put into returned structure
 
 	if delim is a space (' '), then values for ignore parameters are overridden:
-	ignore_spaces = FALSE
-	ignore_empty_cells = TRUE
+	strip_spaces = FALSE
+	discard_empty_cells = TRUE
 */
-struct csv_table * parse_string_to_csv_table(char str[], int charcount, char delim, int ignore_spaces, int ignore_empty_cells);
-struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int ignore_spaces, int ignore_empty_cells);
-struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int ignore_spaces, int ignore_empty_cells);
+struct csv_table * parse_string_to_csv_table(char str[], int charcount, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int strip_spaces, int discard_empty_cells);

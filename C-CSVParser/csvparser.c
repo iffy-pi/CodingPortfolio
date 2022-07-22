@@ -860,10 +860,10 @@ int is_char_control_character(char c){
 	return ( (c >= 0 && c <= 31) || ( c == 127) );
 }
 
-struct csv_table * parse_string_to_csv_table(char str[], int charcount, char delim, int ignore_spaces, int ignore_empty_cells){
+struct csv_table * parse_string_to_csv_table(char str[], int charcount, char delim, int strip_spaces, int discard_empty_cells){
 	if ( delim == ' ' ) {
-		ignore_spaces = FALSE;
-		ignore_empty_cells = TRUE;
+		strip_spaces = FALSE;
+		discard_empty_cells = TRUE;
 	}
 
 	int cur_pos, cur_word_start_pos, cur_word_end_pos;
@@ -871,7 +871,7 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 	int cur_word_len;
 	int cur_delim_pos;
 
-	int has_reached_delim, has_reached_space, has_reached_newl, has_reached_crnewl;
+	int has_reached_delim, has_reached_space, has_reached_newl, has_reached_crnewl, has_reached_only_cr;
 	int is_at_a_delim, has_reached_eos, eof_char_offset;
 
 	struct csv_table * parsed_table;
@@ -891,9 +891,10 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 		has_reached_delim = (str[cur_pos] == delim);
 		has_reached_crnewl = ( str[cur_pos] == '\r' && str[cur_pos+1] == '\n');
 		has_reached_newl = ( str[cur_pos] == '\n' );
+		has_reached_only_cr = ( str[cur_pos] == '\r' && !has_reached_crnewl );
 		has_reached_eos = ( str[cur_pos] == '\0' );
 
-		is_at_a_delim = ( has_reached_delim || has_reached_crnewl || has_reached_newl || has_reached_eos );
+		is_at_a_delim = ( has_reached_delim || has_reached_crnewl || has_reached_newl || has_reached_only_cr || has_reached_eos );
 
 		if ( is_at_a_delim ){
 			// we have reached the end of a word,
@@ -906,8 +907,10 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 			cur_delim_pos = cur_pos;
 			cur_word_end_pos = cur_delim_pos;
 			// there might be trailing spaces on the word, so go backwards until we find non space character
-			if ( ignore_spaces ){
-				while ( str[cur_word_end_pos-1] == ' ' && cur_word_end_pos != cur_word_start_pos) cur_word_end_pos--;
+			if ( strip_spaces ){
+				while ( cur_word_end_pos != cur_word_start_pos && str[cur_word_end_pos-1] == ' ') cur_word_end_pos--;
+				// remove trailing spaces from the word start
+				while ( cur_word_start_pos != cur_word_end_pos && str[cur_word_start_pos] == ' ') cur_word_start_pos++;
 			}
 
 			cur_word_len = cur_word_end_pos - cur_word_start_pos;
@@ -917,7 +920,7 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 				exit(1);
 			}
 
-			if ( !ignore_empty_cells || (ignore_empty_cells && cur_word_len > 0)){
+			if ( !discard_empty_cells || (discard_empty_cells && cur_word_len > 0)){
 				// add the word to the current row
 				add_str_to_csv_row(parsed_row, cur_word, cur_word_len);
 			}
@@ -929,7 +932,7 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 		}
 
 		// it has reached the end of the line if there is a new loine, a carriage return or an end of file
-		if ( has_reached_newl || has_reached_crnewl || has_reached_eos ){
+		if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eos ){
 			// we have gotten to the end of a line
 			// append the currernt row
 			map_row_into_csv_table(parsed_table, parsed_row);
@@ -940,7 +943,7 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 			//If newl or crnewl, there could be more lines
 			eof_char_offset = 0;
 			if ( has_reached_crnewl ) eof_char_offset+=2; // possible terminator is +2 from current index
-			else if ( has_reached_newl ) eof_char_offset+=1; // possible null terminator is +1 from current idnex
+			else if ( has_reached_newl || has_reached_only_cr ) eof_char_offset+=1; // possible null terminator is +1 from current idnex
 
 			// if there are no more lines, eof char offset will point to the terminator
 			if ( str[cur_pos+eof_char_offset] == '\0' ){
@@ -970,10 +973,10 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 
 }
 
-struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim, int ignore_spaces, int ignore_empty_cells){
+struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim, int strip_spaces, int discard_empty_cells){
 
 	// use the string table and proceed
-	struct csv_table * table = parse_string_to_csv_table(curline, charcount, delim, ignore_spaces, ignore_empty_cells);
+	struct csv_table * table = parse_string_to_csv_table(curline, charcount, delim, strip_spaces, discard_empty_cells);
 
 	if ( table == NULL || table->row_count == 0 ){
 		return NULL;
@@ -989,7 +992,7 @@ struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim
 	
 }
 
-struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int ignore_spaces, int ignore_empty_cells){
+struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int strip_spaces, int discard_empty_cells){
 	// open the csv file
 
 	/*
@@ -1011,7 +1014,7 @@ struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int ignor
 		// fgets reads the current line into curline array, max_char_count is maximum amount of lines to read
 		// stops when it hits newline or null terminator
 
-		cur_row = parse_line_to_csv_row(curline, BUFFSIZE, delim, ignore_spaces, ignore_empty_cells);
+		cur_row = parse_line_to_csv_row(curline, BUFFSIZE, delim, strip_spaces, discard_empty_cells);
 
 		// add the current row to the table
 		map_row_into_csv_table(parsed_table, cur_row);
@@ -1022,7 +1025,7 @@ struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int ignor
 	return parsed_table;
 }
 
-struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int ignore_spaces, int ignore_empty_cells){
+struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int strip_spaces, int discard_empty_cells){
 	// we open the file for them
 	FILE * csv_file = fopen(filename, "r");
 	if ( csv_file == NULL ) {
@@ -1030,7 +1033,7 @@ struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim,
 		exit(1);
 	}
 
-	struct csv_table * parsed_table = parse_file_to_csv_table(csv_file, delim, ignore_spaces, ignore_empty_cells);
+	struct csv_table * parsed_table = parse_file_to_csv_table(csv_file, delim, strip_spaces, discard_empty_cells);
 
 	fclose(csv_file);
 
