@@ -874,6 +874,8 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 	int has_reached_delim, has_reached_space, has_reached_newl, has_reached_crnewl, has_reached_only_cr;
 	int is_at_a_delim, has_reached_eos, eof_char_offset;
 
+	int quot_count = 0;
+
 	struct csv_table * parsed_table;
 	struct csv_row * parsed_row;
 
@@ -889,10 +891,20 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 	while ( TRUE ){
 
 		has_reached_delim = (str[cur_pos] == delim);
-		has_reached_crnewl = ( str[cur_pos] == '\r' && str[cur_pos+1] == '\n');
+		has_reached_eos = ( str[cur_pos] == '\0' || cur_pos == charcount-1);
+		has_reached_crnewl =  ( str[cur_pos] == '\r' && str[cur_pos+1] == '\n');
 		has_reached_newl = ( str[cur_pos] == '\n' );
 		has_reached_only_cr = ( str[cur_pos] == '\r' && !has_reached_crnewl );
-		has_reached_eos = ( str[cur_pos] == '\0' );
+
+		if ( str[cur_pos] == '"') quot_count = (quot_count+1) % 2;
+
+		// if quot_count is odd, then we are in the middle of a quot, so spaces and delim should be ignored
+		if ( quot_count != 0 ){
+			if (has_reached_delim) {
+				//printf("Cur pos: %d, resetting delim!\n",cur_pos);
+				has_reached_delim = FALSE;
+			}
+		}
 
 		is_at_a_delim = ( has_reached_delim || has_reached_crnewl || has_reached_newl || has_reached_only_cr || has_reached_eos );
 
@@ -907,7 +919,17 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 			cur_delim_pos = cur_pos;
 			cur_word_end_pos = cur_delim_pos;
 			// there might be trailing spaces on the word, so go backwards until we find non space character
+
+			//printf("Start char: %c\nEnd char: %c\n", str[cur_word_start_pos], str[cur_word_end_pos-1]);
+
+			if ( str[cur_word_start_pos] == '"' && str[cur_word_end_pos-1] == '"'){
+				// the string begins and ends with quotation, move parts one back to strip of quotation
+				cur_word_start_pos++;
+				cur_word_end_pos--;
+			}
+
 			if ( strip_spaces ){
+
 				while ( cur_word_end_pos != cur_word_start_pos && str[cur_word_end_pos-1] == ' ') cur_word_end_pos--;
 				// remove trailing spaces from the word start
 				while ( cur_word_start_pos != cur_word_end_pos && str[cur_word_start_pos] == ' ') cur_word_start_pos++;
@@ -958,7 +980,7 @@ struct csv_table * parse_string_to_csv_table(char str[], int charcount, char del
 		}
 
 
-		if ( str[cur_pos] == '\0' ) break;
+		if ( str[cur_pos] == '\0' || cur_pos >= charcount ) break;
 
 		if ( has_reached_crnewl ) cur_pos++;
 		cur_pos++;
@@ -982,12 +1004,16 @@ struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim
 		return NULL;
 	}
 
-	// obtain and clone the first row
-	struct csv_row * parsed_row = clone_csv_row( get_row_ptr_in_csv_table(table, 0));
+	// obtain the first row
+	struct csv_row *parsed_row = get_row_ptr_in_csv_table(table, 0);
 
-	// free the parsed table
+	// unmap it from the table
+	unmap_row_in_csv_table( table, parsed_row);
+
+	// free the parsed table, we wont free the row since we unmapped it
 	free_csv_table(table);
 
+	// return the parsed row
 	return parsed_row;
 	
 }

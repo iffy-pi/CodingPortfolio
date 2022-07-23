@@ -34,75 +34,61 @@ char * malloc_stripped_str(char * string, int free_str){
 	return new_string;
 }
 
-int main(){
-
-	char * filename = "testing.txt";
-	FILE * csv_file = fopen(filename, "r");
-	if ( csv_file == NULL ) {
-		printf("Could not open CSV file (%s)!!!\n", filename);
-		exit(1);
-	}
-
-
-	char delim = ',';
-	int strip_spaces = TRUE;
-	int discard_empty_cells = TRUE;
-
+struct csv_table * parse_file_to_csv_table_exp(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
 	int bufflen = 10;
 	char buffer[10];
 
 	char last_char, second_last_char;
 
+
 	int curline_finished = TRUE;
-	int prev_line_finished;
+	int prev_line_finished = TRUE;
 
-	//struct csv_row * row;
 	struct csv_table *table = new_csv_table();
-
-	int checked_indx;
+	
 	struct csv_row *cur_row,  *sum_row;
 
 	sum_row = NULL;
 
 	struct csv_cell *sum_row_last_cell, *cur_row_first_cell;
 
-	int merged_cells;
+	int merged_cells, error_occured;
 
 	while ( !feof(csv_file) ){
 
 		memset(buffer, 0, bufflen*sizeof(char));
 
+
+		// reads characters into buffer
+		// stops when it reaches newline, end of file or read bufflen-1 characters
+		// places null terminator at position it stopped at
+		// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string	
 		fgets(buffer, bufflen, csv_file);
 
 		if ( ferror(csv_file) ){
 			// returns TRUE if an error occured while reading the CSV file
-			printf("An error occured reading the csv file!\n");
+			// printf("An error occured reading the csv file!\n");
+			error_occured = TRUE;
 			break;
 		}
 
-		// check if we could read an entire line, i.e. up to a newline
-		// different cases:
-		// read up to a newline (not full buffer): last item is null (from memset) and second to last item is also null
-		// read up to a newline (full buffer): last item is null, second to last is newline
-		// full buffer, not up to a newline: last item is null, second to last item is not newline and not null
-
-		// read an entire line
-		// last char is null and second last char is null (entire line read and buffer not full)
-		// or
-		// last char is null and second last char is newline (entire line is read and buffer full)
-		// or
-		// we have reached eof (no more characters to read from the file, so this line is an entire line)
-		// for lines that are bigger than the buffer, none of these will be true
-
-		second_last_char = buffer[bufflen-2];
-
-		// last char will always be null terminator either because of memset or fgets
-		// curline_finished used to store if the current line was read entirely
-
-
 		if ( buffer[0] != '\0' ){
 
-			printf("---------------------------------->\n");
+			//printf("---------------------------------->\n");
+
+			// read an entire line
+			// last char is null and second last char is null (entire line read and buffer not full)
+			// or
+			// last char is null and second last char is newline (entire line is read and buffer full)
+			// or
+			// we have reached eof (no more characters to read from the file, so this line is an entire line)
+			// for lines that are bigger than the buffer, none of these will be true
+
+			second_last_char = buffer[bufflen-2];
+
+			// last char will always be null terminator either because of memset or fgets
+			// curline_finished used to store if the current line was read entirely
+
 			curline_finished = ( second_last_char == '\0' || second_last_char == '\n' || feof(csv_file));
 
 
@@ -117,12 +103,12 @@ int main(){
 				// parsing it raw and applying parameter requirements afterwards
 				cur_row = parse_line_to_csv_row(buffer, bufflen, delim, FALSE, FALSE);
 
-				printf("Current Row:\n");
-				print_csv_row(cur_row);
-				printf("Current Final Row:\n");
-				print_csv_row(sum_row);
-				if (sum_row == NULL ) printf("\n");
-				printf("\n");
+				// printf("Current Row:\n");
+				// print_csv_row(cur_row);
+				// printf("Current Final Row:\n");
+				// print_csv_row(sum_row);
+				// if (sum_row == NULL ) printf("\n");
+				// printf("\n");
 
 				merged_cells = FALSE;
 
@@ -135,7 +121,7 @@ int main(){
 					sum_row_last_cell = get_cell_ptr_in_csv_row(sum_row, sum_row->cell_count-1);
 					cur_row_first_cell = get_cell_ptr_in_csv_row(cur_row, 0);
 
-					printf("Merging: \"%s\" + \"%s\"\n\n", sum_row_last_cell->str, cur_row_first_cell->str);
+					// printf("Merging: \"%s\" + \"%s\"\n\n", sum_row_last_cell->str, cur_row_first_cell->str);
 					
 					struct csv_cell * sum_row_new_last_cell = new_csv_cell();
 
@@ -193,15 +179,15 @@ int main(){
 					// or the current line is not finished and the  current cell is the tail cell (it might be merged in the next iteration)
 					// or we are ignoring them and this cell is not empty
 					if ( !discard_empty_cells || (!curline_finished && cur_cell==cur_row->cell_list_tail) || (discard_empty_cells && strcmp(cur_cell->str, "")!=0 )){
-						printf("Adding \"%s\"\n", cur_cell->str);
+						// printf("Adding \"%s\"\n", cur_cell->str);
 						add_cell_clone_to_csv_row( sum_row, cur_cell);
 					}
 
 					cur_cell = cur_cell->next;
 				}
 
-				printf("\nNew Final Row:\n");
-				print_csv_row(sum_row);
+				// printf("\nNew Final Row:\n");
+				// print_csv_row(sum_row);
 			}
 
 			if ( curline_finished ) {
@@ -214,14 +200,39 @@ int main(){
 
 			prev_line_finished = curline_finished;
 
-			printf("---------------------------------->\n");
+			// printf("---------------------------------->\n");
 		}
 
 	}
 
-	printf("\nFinal Parsed Rows:\n");
-	print_csv_table(table);
+	if ( error_occured ){
+		free_csv_table(table);
+		table = NULL;
+	}
 
+	return table;
+}
+
+int main(){
+
+	char * filename = "addresses.csv";
+	FILE * csv_file = fopen(filename, "r");
+	if ( csv_file == NULL ) {
+		printf("Could not open CSV file (%s)!!!\n", filename);
+		exit(1);
+	}
+
+	struct csv_table * table = parse_file_to_csv_table_exp(csv_file, ',', FALSE, FALSE);
+	printf("\n");
+	for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+		struct csv_cell * cur_cell = cur_row->cell_list_head;
+		while ( cur_cell != cur_row->cell_list_tail){
+			printf("%s||",cur_cell->str);
+			cur_cell = cur_cell->next;
+		}
+		if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
+		printf("\n");
+	}
 
 	return 0;
 }
