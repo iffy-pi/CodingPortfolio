@@ -467,7 +467,11 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 				if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eof ){
 					// we have gotten to the end of a line
 					// append the currernt row
-					map_row_into_csv_table(table, cur_row);
+					printf("===============================\n");
+					printf("Final Row:\n");
+					print_csv_row(cur_row);
+					printf("===============================\n");
+					if( cur_row != NULL ) map_row_into_csv_table(table, cur_row);
 					// reset the row to none
 					cur_row = NULL;
 
