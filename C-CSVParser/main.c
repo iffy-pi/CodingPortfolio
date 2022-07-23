@@ -251,12 +251,24 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 // 	return table;
 // }
 
-struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
+
+struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells){
+	int parsing_string = ( string != NULL ) && ( string_len > 0);
+
+	if ( csv_file == NULL  && !parsing_string){
+		// there is no parameter to parse
+		return NULL;
+	}
 
 	// buffer for fgets
 	int bufflen = 10;
-	char buffer[10];
-
+	char fgetsbuffer[bufflen];
+	char * buffer = fgetsbuffer;
+	if ( parsing_string) {
+		// then we dont need that buffer
+		buffer = string;
+		bufflen = string_len;
+	}
 	char second_last_char;
 
 	// used csv structures
@@ -550,6 +562,10 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 
 	return table;
+}
+
+struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
+	return parse_file_or_string_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells);
 }
 
 int main(){
