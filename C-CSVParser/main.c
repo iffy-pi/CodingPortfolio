@@ -273,6 +273,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 	int cur_pos, cur_word_start_pos, cur_word_end_pos;
 	char * cur_word;
 	int cur_word_len;
+	int cur_cell_str_len;
 	int cur_delim_pos;
 
 	int has_reached_delim, has_reached_space, has_reached_newl, has_reached_crnewl, has_reached_only_cr;
@@ -289,14 +290,13 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 
 	while ( !feof(csv_file) ){
-
 		memset(buffer, 0, bufflen*sizeof(char));
 
 
 		// reads characters into buffer
 		// stops when it reaches newline, end of file or read bufflen-1 characters
 		// places null terminator at position it stopped at
-		// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string	
+		// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string
 		fgets(buffer, bufflen, csv_file);
 
 		if ( ferror(csv_file) ){
@@ -412,8 +412,24 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 						replacement_cell->str[combined_str_len] = '\0';
 
 						// remove the last cell, the replacement cell will be used
+						printf("Removed cell \"%s\"\n", last_cell->str);
 						unmap_cell_in_csv_row(cur_row, last_cell);
 						free_csv_cell(last_cell);
+
+
+						// //if the entire line is in the buffer then the replacement cell can be stripped as required
+						// if ( entire_cur_line_in_buffer ){
+						// 	printf("Stripping quotes and spaces\n");
+						// 	replacement_cell->str = malloc_strip_quotes_and_spaces(replacement_cell->str, combined_str_len, TRUE, strip_spaces, TRUE);
+
+						// 	if ( !discard_empty_cells || (discard_empty_cells && strlen(replacement_cell->str) > 0) ){
+						// 		map_cell_into_csv_row(cur_row, replacement_cell);
+						// 	} else {
+						// 		free_csv_cell(replacement_cell);
+						// 		replacement_cell = NULL;
+						// 	}
+
+						// }
 
 
 						merging_cells = TRUE;
@@ -424,6 +440,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 					// if merging cells, replacement cell is already the current cell
 					if  ( merging_cells ) {
 						cur_cell = replacement_cell;
+						cur_cell_str_len = combined_str_len;
 					} else {
 						cur_cell = new_csv_cell();
 					}
@@ -433,6 +450,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 					// if this is the last line and the line is not complete
 					// then we do not strip or discard since the line can be merged in the next iteration
 					if ( !entire_cur_line_in_buffer && buffer[cur_word_end_pos] == '\0'){
+						if ( !merging_cells ) mallocstrcpy( &cur_cell->str, cur_word, cur_word_len);
 					} else {
 						// not the last word in buffer without entire line
 						// or is the last word but the buffer has entire line
@@ -451,7 +469,8 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 					}
 
 					if ( append_this_cell ){
-						printf("Appending cell: \"%s\"\n", cur_cell->str);
+						if ( merging_cells) printf("Appending merged cell: \"%s\"\n", cur_cell->str);
+						else printf("Appending cell: \"%s\"\n", cur_cell->str);
 						map_cell_into_csv_row(cur_row, cur_cell);
 					} else {
 						printf("Cell \"%s\" discarded!\n", cur_cell->str);
@@ -506,7 +525,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 			entire_prev_line_in_buffer = entire_cur_line_in_buffer;
 
-			printf("---------------------------------->\n");
+			printf("----------------------------------->\n");
 		}
 	}
 
@@ -520,7 +539,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 int main(){
 
-	char * filename = "addresses.csv";
+	char * filename = "testing.txt";
 	FILE * csv_file = fopen(filename, "r");
 	if ( csv_file == NULL ) {
 		printf("Could not open CSV file (%s)!!!\n", filename);
@@ -528,16 +547,16 @@ int main(){
 	}
 
 	struct csv_table * table = parse_file_to_csv_table_exp2(csv_file, ',', FALSE, FALSE);
-	printf("\n");
-	for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
-		struct csv_cell * cur_cell = cur_row->cell_list_head;
-		while ( cur_cell != cur_row->cell_list_tail){
-			printf("%s||",cur_cell->str);
-			cur_cell = cur_cell->next;
-		}
-		if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
-		printf("\n");
-	}
+	// printf("\n");
+	// for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+	// 	struct csv_cell * cur_cell = cur_row->cell_list_head;
+	// 	while ( cur_cell != cur_row->cell_list_tail){
+	// 		printf("%s||",cur_cell->str);
+	// 		cur_cell = cur_cell->next;
+	// 	}
+	// 	if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
+	// 	printf("\n");
+	// }
 
 	return 0;
 }
