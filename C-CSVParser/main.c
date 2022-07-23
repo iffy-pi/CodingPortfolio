@@ -371,6 +371,14 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 					// we have the current word len so we know where it ends
 					cur_word = buffer + cur_word_start_pos;
 
+					printf("$cur_word = \"");
+					int q = 0;
+					while ( q < cur_word_len-1 ){
+						printf("%c", cur_word[q]);
+						q++;
+					}
+					printf("%c\"\n", cur_word[q]);
+
 					// do stuff with the new word here
 					merging_cells = FALSE;
 					if ( cur_row == NULL ){
@@ -386,13 +394,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 						combined_str_len = last_word_len + cur_word_len;
 
-						printf("Merging: \"%s\" + \"", last_cell->str);
-						int q = 0;
-						while ( q < cur_word_len-1 ){
-							printf("%c", cur_word[q]);
-							q++;
-						}
-						printf("%c\"\n", cur_word[q]);
+						printf("Merging: \"%s\" + $cur_word\n", last_cell->str);
 
 
 						replacement_cell = new_csv_cell();
@@ -415,7 +417,6 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 
 						merging_cells = TRUE;
-						first_word_for_buffer_parsed = TRUE;
 					}
 
 					// create a new cell for the word and add it to the current row
@@ -455,6 +456,8 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 					} else {
 						printf("Cell \"%s\" discarded!\n", cur_cell->str);
 					}
+
+					first_word_for_buffer_parsed = TRUE;
 
 					// next word starts after this word ends
 					cur_word_start_pos = cur_delim_pos+1;
