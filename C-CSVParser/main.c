@@ -267,7 +267,7 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 	struct csv_cell *cur_cell, *last_cell, *replacement_cell;
 	int last_word_len, combined_str_len, merging_cells;
 
-	int error_occured;
+	int error_occured = FALSE;
 
 	// character position items
 	int cur_pos, cur_word_start_pos, cur_word_end_pos;
@@ -297,11 +297,12 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 		// stops when it reaches newline, end of file or read bufflen-1 characters
 		// places null terminator at position it stopped at
 		// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string
+		// printf("File finished: %d\n", feof(csv_file));
+		// printf("Doing fgets\n");
 		fgets(buffer, bufflen, csv_file);
 
 		if ( ferror(csv_file) ){
 			// returns TRUE if an error occured while reading the CSV file
-			// printf("An error occured reading the csv file!\n");
 			error_occured = TRUE;
 			break;
 		}
@@ -530,9 +531,22 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 	}
 
 	if ( error_occured ){
+		printf("An error occured!\n");
 		free_csv_table(table);
-		table = NULL;
+		return NULL;
 	}
+
+	printf("\n");
+	for(struct csv_row * cr = table->row_list_head; has_next_row(table, cr); cr=cr->next){
+		struct csv_cell * cc = cr->cell_list_head;
+		while ( cc != cr->cell_list_tail){
+			printf("%s||",cc->str);
+			cc = cc->next;
+		}
+		if ( cr->cell_list_tail != NULL ) printf("%s", cr->cell_list_tail->str);
+		printf("\n");
+	}
+
 
 	return table;
 }
