@@ -378,7 +378,8 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 						printf("%c", cur_word[q]);
 						q++;
 					}
-					printf("%c\"\n", cur_word[q]);
+					if (cur_word_len == 0) printf("\"\n");
+					else printf("%c\"\n", cur_word[q]);
 
 					// do stuff with the new word here
 					merging_cells = FALSE;
@@ -553,14 +554,14 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 
 int main(){
 
-	char * filename = "testing.txt";
+	char * filename = "addresses.csv";
 	FILE * csv_file = fopen(filename, "r");
 	if ( csv_file == NULL ) {
 		printf("Could not open CSV file (%s)!!!\n", filename);
 		exit(1);
 	}
 
-	struct csv_table * table = parse_file_to_csv_table_exp2(csv_file, ',', FALSE, FALSE);
+	struct csv_table * table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
 	// printf("\n");
 	// for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
 	// 	struct csv_cell * cur_cell = cur_row->cell_list_head;
