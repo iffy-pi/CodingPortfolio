@@ -252,7 +252,7 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 // }
 
 
-struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells){
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells, int verbose){
 	int parsing_string = ( string != NULL ) && ( string_len > 0);
 	int parsing_file = ( csv_file != NULL);
 
@@ -341,7 +341,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 		if ( buffer[0] != '\0' ){
 
-			printf("---------------------------------->\n");
+			if (verbose) printf("---------------------------------->\n");
 
 			if ( parsing_string ){
 				// parsing string, buffer has all lines in the file
@@ -401,14 +401,16 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 					// we have the current word len so we know where it ends
 					cur_word = buffer + cur_word_start_pos;
 
-					printf("$cur_word = \"");
-					int q = 0;
-					while ( q < cur_word_len-1 ){
-						printf("%c", cur_word[q]);
-						q++;
+					if (verbose){
+						printf("$cur_word = \"");
+						int q = 0;
+						while ( q < cur_word_len-1 ){
+							printf("%c", cur_word[q]);
+							q++;
+						}
+						if (cur_word_len == 0) printf("\"\n");
+						else printf("%c\"\n", cur_word[q]);
 					}
-					if (cur_word_len == 0) printf("\"\n");
-					else printf("%c\"\n", cur_word[q]);
 
 					// do stuff with the new word here
 					merging_cells = FALSE;
@@ -425,7 +427,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 						combined_str_len = last_word_len + cur_word_len;
 
-						printf("Merging: \"%s\" + $cur_word\n", last_cell->str);
+						if (verbose) printf("Merging: \"%s\" + $cur_word\n", last_cell->str);
 
 
 						replacement_cell = new_csv_cell();
@@ -443,7 +445,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 						replacement_cell->str[combined_str_len] = '\0';
 
 						// remove the last cell, the replacement cell will be used
-						printf("Removed cell \"%s\"\n", last_cell->str);
+						if (verbose) printf("Removed cell \"%s\"\n", last_cell->str);
 						unmap_cell_in_csv_row(cur_row, last_cell);
 						free_csv_cell(last_cell);
 
@@ -471,7 +473,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 						// or is the last word but the buffer has entire line
 						// strip spaces and quotes
 
-						printf("Stripping quotes and spaces\n");
+						if (verbose) printf("Stripping quotes and spaces\n");
 
 						if ( merging_cells){
 							cur_cell->str = malloc_strip_quotes_and_spaces(cur_cell->str, combined_str_len, TRUE, strip_spaces, TRUE);
@@ -484,11 +486,13 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 					}
 
 					if ( append_this_cell ){
-						if ( merging_cells) printf("Appending merged cell: \"%s\"\n", cur_cell->str);
-						else printf("Appending cell: \"%s\"\n", cur_cell->str);
+						if ( verbose ){
+							if ( merging_cells) printf("Appending merged cell: \"%s\"\n", cur_cell->str);
+							else printf("Appending cell: \"%s\"\n", cur_cell->str);
+						}
 						map_cell_into_csv_row(cur_row, cur_cell);
 					} else {
-						printf("Cell \"%s\" discarded!\n", cur_cell->str);
+						if (verbose) printf("Cell \"%s\" discarded!\n", cur_cell->str);
 					}
 
 					first_word_for_buffer_parsed = TRUE;
@@ -504,10 +508,12 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eof || (parsing_string && has_reached_eos) ){
 					// we have gotten to the end of a line
 					// append the currernt row
-					printf("===============================\n");
-					printf("Final Row:\n");
-					print_csv_row(cur_row);
-					printf("===============================\n");
+					if ( verbose ){
+						printf("===============================\n");
+						printf("Final Row:\n");
+						print_csv_row(cur_row);
+						printf("===============================\n");
+					}
 					if( cur_row != NULL ) map_row_into_csv_table(table, cur_row);
 					// reset the row to none
 					cur_row = NULL;
@@ -537,7 +543,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				cur_pos++;
 			}
 
-			printf("----------------------------------->\n");
+			if (verbose) printf("----------------------------------->\n");
 		}
 
 		buffer_iterations++;
@@ -553,15 +559,15 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 }
 
 struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_fileptr_or_char_array_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells);
+	return parse_fileptr_or_char_array_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells, FALSE);
 }
 
 struct csv_table * parse_char_array_to_csv_table_exp(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_fileptr_or_char_array_to_csv_table(NULL, arr, arrlen, delim, strip_spaces, discard_empty_cells);
+	return parse_fileptr_or_char_array_to_csv_table(NULL, arr, arrlen, delim, strip_spaces, discard_empty_cells, FALSE);
 }
 
 struct csv_table * parse_string_to_csv_table_exp(char str[], char delim, int strip_spaces, int discard_empty_cells){
-	return parse_fileptr_or_char_array_to_csv_table(NULL, str, strlen(str)+1, delim, strip_spaces, discard_empty_cells);
+	return parse_fileptr_or_char_array_to_csv_table(NULL, str, strlen(str)+1, delim, strip_spaces, discard_empty_cells, FALSE);
 }
 
 
@@ -576,9 +582,9 @@ int main(){
 	
 	struct csv_table * table;
 	
-	//table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
+	table = parse_file_to_csv_table_exp2(csv_file, ',', FALSE, FALSE);
 	char * a_str = "iffy1,iffy2,iffy3";
-	table = parse_string_to_csv_table_exp(a_str, ',', TRUE, TRUE);
+	//table = parse_string_to_csv_table_exp(a_str, ',', TRUE, TRUE);
 
 
 
