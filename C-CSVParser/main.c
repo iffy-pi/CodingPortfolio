@@ -252,7 +252,7 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 // }
 
 
-struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells){
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells){
 	int parsing_string = ( string != NULL ) && ( string_len > 0);
 	int parsing_file = ( csv_file != NULL);
 
@@ -553,12 +553,17 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 }
 
 struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_file_or_string_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells);
+	return parse_fileptr_or_char_array_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells);
 }
 
-struct csv_table * parse_string_to_csv_table_exp(char str[], int bufferlen, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_file_or_string_to_csv_table(NULL, str, bufferlen, delim, strip_spaces, discard_empty_cells);
+struct csv_table * parse_char_array_to_csv_table_exp(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells){
+	return parse_fileptr_or_char_array_to_csv_table(NULL, arr, arrlen, delim, strip_spaces, discard_empty_cells);
 }
+
+struct csv_table * parse_string_to_csv_table_exp(char str[], char delim, int strip_spaces, int discard_empty_cells){
+	return parse_fileptr_or_char_array_to_csv_table(NULL, str, strlen(str)+1, delim, strip_spaces, discard_empty_cells);
+}
+
 
 int main(){
 
@@ -573,7 +578,7 @@ int main(){
 	
 	//table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
 	char * a_str = "iffy1,iffy2,iffy3";
-	table = parse_string_to_csv_table_exp(a_str, strlen(a_str)+1, ',', TRUE, TRUE);
+	table = parse_string_to_csv_table_exp(a_str, ',', TRUE, TRUE);
 
 
 
