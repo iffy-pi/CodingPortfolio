@@ -254,90 +254,114 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 
 struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells){
 	int parsing_string = ( string != NULL ) && ( string_len > 0);
+	int parsing_file = ( csv_file != NULL);
 
-	if ( csv_file == NULL  && !parsing_string){
-		// there is no parameter to parse
+	if ( parsing_file == parsing_string ){
+		// they are both 0 or they are both one
+		// in both cases we cant decide what to parse, return null;
 		return NULL;
 	}
 
 	// buffer for fgets
-	int bufflen = 10;
-	char fgetsbuffer[bufflen];
-	char * buffer = fgetsbuffer;
+	int bufflen;
+	char * buffer;
 	if ( parsing_string) {
 		// then we dont need that buffer
 		buffer = string;
 		bufflen = string_len;
+	} else {
+		// parsing file
+		bufflen = 10;
+		buffer = (char *) malloc(bufflen * sizeof(char));
 	}
+
+
 	char second_last_char;
+
+	// how many times we got the buffer using fgets, will be 0 for parsing string
+	int buffer_iterations = 0;
+
+	// reporting fgets errors
+	int error_occured = FALSE;
 
 	// used csv structures
 	struct csv_table *table = new_csv_table();
 	struct csv_row *cur_row = NULL;
 
-	// values used for merging cells
+	// values used for merging and appending cells
 	struct csv_cell *cur_cell, *last_cell, *replacement_cell;
-	int last_word_len, combined_str_len, merging_cells;
+	int last_word_len, combined_str_len, cur_cell_str_len, merging_cells;
 
-	int error_occured = FALSE;
-
-	// character position items
-	int cur_pos, cur_word_start_pos, cur_word_end_pos;
+	// character position items for getting the current word
+	int cur_pos, cur_word_start_pos, cur_word_end_pos, cur_delim_pos;
 	char * cur_word;
 	int cur_word_len;
-	int cur_cell_str_len;
-	int cur_delim_pos;
 
+	// parsing flags
 	int has_reached_delim, has_reached_space, has_reached_newl, has_reached_crnewl, has_reached_only_cr;
 	int is_at_a_delim, has_reached_eos, has_reached_eof, eos_char_offset;
 
+	// counting how many " appear, used for proper parsing
 	int quot_count = 0;
 
+	// used to indicate if the first word in the current buffer has been parsed
+	// used in parsing files
 	int first_word_for_buffer_parsed;
 
-	int linecnt = 0;
+	// indicates if the entire line was read into buffer
+	int entire_cur_line_in_buffer;
 
-	int entire_cur_line_in_buffer, entire_prev_line_in_buffer;
+	// used as a checker
 	int append_this_cell;
 
+	// if parsing file, we call fgets till we have read entire file
+	// if parsing string, we know string is entirely in memory so no need for other work
 
-	while ( !feof(csv_file) ){
-		memset(buffer, 0, bufflen*sizeof(char));
+	while ( (parsing_file && !feof(csv_file)) || ( parsing_string && buffer_iterations < 1) ){
+
+		// if we are parsing file, multiple iterations of fgets, so continue as going
+		if ( parsing_file ){
+			memset(buffer, 0, bufflen*sizeof(char));
 
 
-		// reads characters into buffer
-		// stops when it reaches newline, end of file or read bufflen-1 characters
-		// places null terminator at position it stopped at
-		// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string
-		// printf("File finished: %d\n", feof(csv_file));
-		// printf("Doing fgets\n");
-		fgets(buffer, bufflen, csv_file);
+			// reads characters into buffer
+			// stops when it reaches newline, end of file or read bufflen-1 characters
+			// places null terminator at position it stopped at
+			// source: https://www.ibm.com/docs/en/i/7.4?topic=functions-fgets-read-string
+			// printf("File finished: %d\n", feof(csv_file));
+			// printf("Doing fgets\n");
+			fgets(buffer, bufflen, csv_file);
 
-		if ( ferror(csv_file) ){
-			// returns TRUE if an error occured while reading the CSV file
-			error_occured = TRUE;
-			break;
+			if ( ferror(csv_file) ){
+				// returns TRUE if an error occured while reading the CSV file
+				error_occured = TRUE;
+				break;
+			}
 		}
 
 		if ( buffer[0] != '\0' ){
 
 			printf("---------------------------------->\n");
 
-			// read an entire line
-			// last char is null and second last char is null (entire line read and buffer not full)
-			// or
-			// last char is null and second last char is newline (entire line is read and buffer full)
-			// or
-			// we have reached eof (no more characters to read from the file, so this line is an entire line)
-			// for lines that are bigger than the buffer, none of these will be true
+			if ( parsing_string ){
+				// parsing string, buffer has all lines in the file
+				entire_cur_line_in_buffer = TRUE;
+			} else {
+				// read an entire line
+				// last char is null and second last char is null (entire line read and buffer not full)
+				// or
+				// last char is null and second last char is newline (entire line is read and buffer full)
+				// or
+				// we have reached eof (no more characters to read from the file, so this line is an entire line)
+				// for lines that are bigger than the buffer, none of these will be true
 
-			second_last_char = buffer[bufflen-2];
+				second_last_char = buffer[bufflen-2];
 
-			// last char will always be null terminator either because of memset or fgets
-			// curline_finished used to store if the current line was read entirely
+				// last char will always be null terminator either because of memset or fgets
+				// curline_finished used to store if the current line was read entirely
 
-			entire_cur_line_in_buffer = ( second_last_char == '\0' || second_last_char == '\n' || feof(csv_file));
-
+				entire_cur_line_in_buffer = ( second_last_char == '\0' || second_last_char == '\n' || feof(csv_file));
+			}
 
 			// parse the buffer character by character as usual
 
@@ -353,7 +377,7 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 				has_reached_crnewl =  ( buffer[cur_pos] == '\r' && buffer[cur_pos+1] == '\n');
 				has_reached_newl = ( buffer[cur_pos] == '\n' );
 				has_reached_only_cr = ( buffer[cur_pos] == '\r' && !has_reached_crnewl );
-				has_reached_eof = ( has_reached_eos && feof(csv_file) );
+				has_reached_eof = ( parsing_file && has_reached_eos && feof(csv_file) );
 
 				if ( buffer[cur_pos] == '"') quot_count = (quot_count+1) % 2;
 
@@ -368,13 +392,6 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 				is_at_a_delim = ( has_reached_delim || has_reached_crnewl || has_reached_newl || has_reached_only_cr || has_reached_eos );
 
 				if ( is_at_a_delim ){
-					// we have reached the end of a word,
-					//empty the previous word if there was one
-					// if ( cur_word != NULL ) {
-					// 	free(cur_word);
-					// 	cur_word = NULL;
-					// }
-
 					cur_delim_pos = cur_pos;
 					cur_word_end_pos = cur_delim_pos;
 
@@ -429,22 +446,6 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 						printf("Removed cell \"%s\"\n", last_cell->str);
 						unmap_cell_in_csv_row(cur_row, last_cell);
 						free_csv_cell(last_cell);
-
-
-						// //if the entire line is in the buffer then the replacement cell can be stripped as required
-						// if ( entire_cur_line_in_buffer ){
-						// 	printf("Stripping quotes and spaces\n");
-						// 	replacement_cell->str = malloc_strip_quotes_and_spaces(replacement_cell->str, combined_str_len, TRUE, strip_spaces, TRUE);
-
-						// 	if ( !discard_empty_cells || (discard_empty_cells && strlen(replacement_cell->str) > 0) ){
-						// 		map_cell_into_csv_row(cur_row, replacement_cell);
-						// 	} else {
-						// 		free_csv_cell(replacement_cell);
-						// 		replacement_cell = NULL;
-						// 	}
-
-						// }
-
 
 						merging_cells = TRUE;
 					}
@@ -536,11 +537,10 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 				cur_pos++;
 			}
 
-
-			entire_prev_line_in_buffer = entire_cur_line_in_buffer;
-
 			printf("----------------------------------->\n");
 		}
+
+		buffer_iterations++;
 	}
 
 	if ( error_occured ){
@@ -548,18 +548,6 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 		free_csv_table(table);
 		return NULL;
 	}
-
-	printf("\n");
-	for(struct csv_row * cr = table->row_list_head; has_next_row(table, cr); cr=cr->next){
-		struct csv_cell * cc = cr->cell_list_head;
-		while ( cc != cr->cell_list_tail){
-			printf("%s||",cc->str);
-			cc = cc->next;
-		}
-		if ( cr->cell_list_tail != NULL ) printf("%s", cr->cell_list_tail->str);
-		printf("\n");
-	}
-
 
 	return table;
 }
@@ -578,16 +566,20 @@ int main(){
 	}
 
 	struct csv_table * table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
-	// printf("\n");
-	// for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
-	// 	struct csv_cell * cur_cell = cur_row->cell_list_head;
-	// 	while ( cur_cell != cur_row->cell_list_tail){
-	// 		printf("%s||",cur_cell->str);
-	// 		cur_cell = cur_cell->next;
-	// 	}
-	// 	if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
-	// 	printf("\n");
-	// }
+	if ( table == NULL ){
+		printf("NO value!\n");
+		return 0;
+	}
+	printf("\n");
+	for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+		struct csv_cell * cur_cell = cur_row->cell_list_head;
+		while ( cur_cell != cur_row->cell_list_tail){
+			printf("%s||",cur_cell->str);
+			cur_cell = cur_cell->next;
+		}
+		if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
+		printf("\n");
+	}
 
 	return 0;
 }
