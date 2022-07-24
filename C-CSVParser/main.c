@@ -501,7 +501,7 @@ struct csv_table * parse_file_or_string_to_csv_table( FILE * csv_file, char stri
 
 				// it has reached the end of the line
 				// fgets only gets to newline so we know we have reached end of the buffer
-				if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eof ){
+				if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eof || (parsing_string && has_reached_eos) ){
 					// we have gotten to the end of a line
 					// append the currernt row
 					printf("===============================\n");
