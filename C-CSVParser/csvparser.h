@@ -37,6 +37,7 @@ struct csv_table {
 };
 
 int mallocstrcpy(char ** dest, char * src, int len);
+char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes, int strip_spaces, int free_string);
 
 void print_csv_cell(struct csv_cell * cellptr );
 void print_csv_row(struct csv_row * rowptr);
@@ -137,17 +138,42 @@ int delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colind
 int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell);
 int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 
-/* parse csv file and strings to csv table structure (linked list of csv rows) */
+/* Base function for all the below functions */
+/* Either parses file or string */
 /*
-	delim -> what should be used as the delimiter
-	strip_spaces -> if TRUE, trims cell strings of trailing spaces
-	discard_empty_cells -> if TRUE, any cells with empty string (after trimming) will not be put into returned structure
+	delim				: what should be used as the delimiter
+	strip_spaces 		: if TRUE, trims cell strings of trailing spaces and leading spaces
+	discard_empty_cells : if TRUE, any cells with empty string (after stripping) will not be put into returned structure
 
 	if delim is a space (' '), then values for ignore parameters are overridden:
 	strip_spaces = FALSE
 	discard_empty_cells = TRUE
+
+	csv_file			: File pointer to CSV file to parse, set to NULL if you want to parse the character array
+	string 				: The character array you want to parse, set to NULL if you want to parse the CSV file
+	string_len 			: The size of the character array, set to 0 if you want to parse the CSV file
+
+	Can only parse either string or file, not both
+	if ( csv_file == NULL && (string == NULL || string_len < 0)) function will return NULL
+	if ( csv_file != NULL && (string == NULL || string_len < 0)) function will return parsed csv for csv_file
+	if ( csv_file == NULL && (string != NULL && string_len > 0)) function will return parsed csv for character array string
+	if ( csv_file != NULL && (string != NULL && string_len > 0)) function will return NULL
+
+	if an error occurs while reading the file, function will return NULL
+
 */
-struct csv_table * parse_string_to_csv_table(char str[], int charcount, char delim, int strip_spaces, int discard_empty_cells);
-struct csv_row * parse_line_to_csv_row(char curline[], int charcount, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells, int verbose);
+
+/* Parse character array or string into csv_table, parse_string calls parse_char_array with strlen(string)+1 as arrlen */
+struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_string_to_csv_table(char * string, char delim, int strip_spaces, int discard_empty_cells);
+
+/* Parse character array or string into csv_row, parse_string calls parse_char_array with strlen(string)+1 as arrlen */
+struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_row * parse_string_to_csv_row(char * string, char delim, int strip_spaces, int discard_empty_cells);
+
+/* Parses a file pointer into csv_table */
 struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int strip_spaces, int discard_empty_cells);
+
+/* Opens the specified file and parses it into csv_table */ 
 struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int strip_spaces, int discard_empty_cells);
