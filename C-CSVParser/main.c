@@ -556,6 +556,10 @@ struct csv_table * parse_file_to_csv_table_exp2(FILE * csv_file, char delim, int
 	return parse_file_or_string_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells);
 }
 
+struct csv_table * parse_string_to_csv_table_exp(char str[], int bufferlen, char delim, int strip_spaces, int discard_empty_cells){
+	return parse_file_or_string_to_csv_table(NULL, str, bufferlen, delim, strip_spaces, discard_empty_cells);
+}
+
 int main(){
 
 	char * filename = "addresses.csv";
@@ -564,8 +568,15 @@ int main(){
 		printf("Could not open CSV file (%s)!!!\n", filename);
 		exit(1);
 	}
+	
+	struct csv_table * table;
+	
+	//table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
+	char * a_str = "iffy1,iffy2,iffy3";
+	table = parse_string_to_csv_table_exp(a_str, strlen(a_str)+1, ',', TRUE, TRUE);
 
-	struct csv_table * table = parse_file_to_csv_table_exp2(csv_file, ',', TRUE, TRUE);
+
+
 	if ( table == NULL ){
 		printf("NO value!\n");
 		return 0;
