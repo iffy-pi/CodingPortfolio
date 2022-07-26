@@ -39,10 +39,6 @@ struct csv_table {
 int mallocstrcpy(char ** dest, char * src, int len);
 char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes, int strip_spaces, int free_string);
 
-void print_csv_cell(struct csv_cell * cellptr );
-void print_csv_row(struct csv_row * rowptr);
-void print_csv_table(struct csv_table * tableptr);
-
 /* Allocate csv structures on the heap, anything allocated should be deallocated with free functions */
 struct csv_cell * new_csv_cell();
 struct csv_cell * new_csv_cell_from_str(char * string);
@@ -51,6 +47,10 @@ struct csv_table * new_csv_table();
 void free_csv_cell(struct csv_cell * cellptr);
 void free_csv_row(struct csv_row * rowptr);
 void free_csv_table(struct csv_table * tableptr);
+
+void print_csv_cell(struct csv_cell * cellptr );
+void print_csv_row(struct csv_row * rowptr);
+void print_csv_table(struct csv_table * tableptr);
 
 void populate_csv_cell_str(struct csv_cell * cell, char * string);
 

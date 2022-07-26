@@ -12,9 +12,9 @@ int main(){
 	
 	struct csv_table * table;
 	
-	table = parse_file_to_csv_table(csv_file, ',', FALSE, FALSE);
-	char * a_str = "iffy1,iffy2,iffy3";
-	//table = parse_string_to_csv_table_exp(a_str, ',', TRUE, TRUE);
+	//table = parse_file_to_csv_table(csv_file, ',', FALSE, FALSE);
+	char * a_str = "iffy1,iffy2,iffy3,\"   \n";
+	table = parse_string_to_csv_table(a_str, ',', FALSE, FALSE);
 
 
 
@@ -22,16 +22,17 @@ int main(){
 		printf("NO value!\n");
 		return 0;
 	}
-	printf("\n");
-	for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
-		struct csv_cell * cur_cell = cur_row->cell_list_head;
-		while ( cur_cell != cur_row->cell_list_tail){
-			printf("%s||",cur_cell->str);
-			cur_cell = cur_cell->next;
-		}
-		if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
-		printf("\n");
-	}
+	print_csv_table(table);
+	// printf("\n");
+	// for(struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+	// 	struct csv_cell * cur_cell = cur_row->cell_list_head;
+	// 	while ( cur_cell != cur_row->cell_list_tail){
+	// 		printf("%s||",cur_cell->str);
+	// 		cur_cell = cur_cell->next;
+	// 	}
+	// 	if ( cur_row->cell_list_tail != NULL ) printf("%s", cur_row->cell_list_tail->str);
+	// 	printf("\n");
+	// }
 
 	return 0;
 }

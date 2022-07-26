@@ -59,89 +59,6 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 
 }
 
-
-void print_csv_cell(struct csv_cell * cellptr ){
-	if (cellptr ==  NULL ){
-		printf("(null)");
-		return;
-	}
-	printf("\"%s\"",cellptr->str);
-}
-
-void print_csv_row(struct csv_row * rowptr){
-
-	if (rowptr == NULL ){
-		printf("(null)");
-		return;
-	}
-
-	int printed = 0;
-
-	struct csv_cell * cur_cell = rowptr->cell_list_head;
-	printf("[");
-	while ( cur_cell != NULL && cur_cell->next != NULL ){
-		// while there is a next cell
-		// so we will break when we reach tail cell
-
-		print_csv_cell(cur_cell);
-		printf(", ");
-		printed++;
-
-		// move up the list
-		cur_cell = cur_cell->next;
-	}
-
-	if (rowptr->cell_list_tail != NULL ) {
-		print_csv_cell(rowptr->cell_list_tail);
-		printed++;
-	}
-
-	printf("]\n");
-
-	if (printed != rowptr->cell_count) {
-		printf("Unbalanced!\n");
-		exit(1);
-	}
-}
-
-void print_csv_table(struct csv_table * tableptr){
-	if ( tableptr == NULL ) {
-		printf("(null)\n");
-		return;
-	}
-
-	int printed = 0;
-
-	struct csv_row * cur_row = tableptr->row_list_head;
-
-	printf("[\n");
-
-	while ( cur_row != NULL && cur_row->next != NULL ){
-		// while there is a next cell
-		// so we will break when we reach tail cell
-
-		print_csv_row(cur_row);
-		printed++;
-
-
-		// move up the list
-		cur_row = cur_row->next;
-	}
-
-	// will break when we are at tail
-	if (tableptr->row_list_tail != NULL ) {
-		print_csv_row(tableptr->row_list_tail);
-		printed++;
-	}
-
-	printf("]\n");
-
-	if ( tableptr->row_count != printed) {
-		printf("Missing rows somewhere!");
-		exit(1);
-	}
-}
-
 struct csv_cell * new_csv_cell(){
 	struct csv_cell * cellptr = (struct csv_cell *) malloc(sizeof(struct csv_cell));
 	cellptr->str = NULL;
@@ -277,6 +194,88 @@ void free_csv_table(struct csv_table * tableptr){
 	// free the actual row structure
 	free(tableptr);
 	tableptr=NULL;
+}
+
+void print_csv_cell(struct csv_cell * cellptr ){
+	if (cellptr ==  NULL ){
+		printf("(null)");
+		return;
+	}
+	printf("\"%s\"",cellptr->str);
+}
+
+void print_csv_row(struct csv_row * rowptr){
+
+	if (rowptr == NULL ){
+		printf("(null)");
+		return;
+	}
+
+	int printed = 0;
+
+	struct csv_cell * cur_cell = rowptr->cell_list_head;
+	printf("[");
+	while ( cur_cell != NULL && cur_cell->next != NULL ){
+		// while there is a next cell
+		// so we will break when we reach tail cell
+
+		print_csv_cell(cur_cell);
+		printf(", ");
+		printed++;
+
+		// move up the list
+		cur_cell = cur_cell->next;
+	}
+
+	if (rowptr->cell_list_tail != NULL ) {
+		print_csv_cell(rowptr->cell_list_tail);
+		printed++;
+	}
+
+	printf("]\n");
+
+	if (printed != rowptr->cell_count) {
+		printf("Unbalanced!\n");
+		exit(1);
+	}
+}
+
+void print_csv_table(struct csv_table * tableptr){
+	if ( tableptr == NULL ) {
+		printf("(null)\n");
+		return;
+	}
+
+	int printed = 0;
+
+	struct csv_row * cur_row = tableptr->row_list_head;
+
+	printf("[\n");
+
+	while ( cur_row != NULL && cur_row->next != NULL ){
+		// while there is a next cell
+		// so we will break when we reach tail cell
+
+		print_csv_row(cur_row);
+		printed++;
+
+
+		// move up the list
+		cur_row = cur_row->next;
+	}
+
+	// will break when we are at tail
+	if (tableptr->row_list_tail != NULL ) {
+		print_csv_row(tableptr->row_list_tail);
+		printed++;
+	}
+
+	printf("]\n");
+
+	if ( tableptr->row_count != printed) {
+		printf("Missing rows somewhere!");
+		exit(1);
+	}
 }
 
 void populate_csv_cell_str(struct csv_cell * cell, char * string){
