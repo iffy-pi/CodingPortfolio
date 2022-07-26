@@ -31,11 +31,13 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 	int new_word_start_pos = 0;
 	int new_word_end_pos = len;
 
-	// remove the quotes if present
+	// remove the original quotes if present
 	if ( strip_quotes && string[new_word_start_pos] == '"' && string[new_word_end_pos-1] == '"') {
+
 		new_word_start_pos++;
 		new_word_end_pos--;
 	}
+
 
 	// go through the word and find the beginning of non space character
 	while(strip_spaces && new_word_end_pos != new_word_start_pos && string[new_word_end_pos-1] == ' ' ) new_word_end_pos--;
@@ -47,10 +49,34 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 	char *new_string = (char *)malloc( (new_wordlen+1) * sizeof(char));
 
 	// copy the words over
-	for(int i=new_word_start_pos; i < new_word_end_pos; i++){
-		new_string[i - new_word_start_pos] = string[i];
+	int place_character;
+	int new_string_indx = 0;
+	int quot_count = 0;
+
+	for(int old_string_indx=new_word_start_pos; old_string_indx < new_word_end_pos; old_string_indx++){
+		// if the current character is quote and previous character is not quote, then dont add the quote
+		place_character = TRUE;
+		if ( string[old_string_indx] == '"' ){
+
+			// quot can only be placed if it is escaped, i.e. for '""' result is '"' and for '""""' result is '""'
+			// quots must be removed if
+			// quot appears at the beginning of the word (there is no quot behind it)
+			// previous character is not a quot
+			// previous character is a quot but not an even quot count, indicates it was used as escape for another quot
+			quot_count = (quot_count + 1) % 2;
+			if ( old_string_indx == new_word_start_pos || string[old_string_indx-1] != '"' || string[old_string_indx-1] == '"' && quot_count == 1 ) place_character = FALSE;
+		}
+
+		if ( place_character ){
+			new_string[new_string_indx] = string[old_string_indx];
+			new_string_indx++;
+		}
 	}
-	// add the null terminator
+
+	for( new_string_indx=new_string_indx; new_string_indx < new_wordlen; new_string_indx++){
+		// populate the remaining spaces with null terminator?, this may not be safe
+		new_string[new_string_indx] = '\0';
+	}
 	new_string[new_wordlen] = '\0';
 
 	if (free_string) free(string);
@@ -1022,7 +1048,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 				if ( buffer[cur_pos] == '"') quot_count = (quot_count+1) % 2;
 
-				// if quot_count is odd, then we are in the middle of a quot, so spaces and delim should be ignored
+				// if quot_count is odd, then we are in the middle of a quot, so delim and newline should be ignored
 				if ( quot_count != 0 ){
 					if (has_reached_delim) {
 						//printf("Cur pos: %d, resetting delim!\n",cur_pos);
@@ -1030,7 +1056,11 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 					}
 				}
 
-				is_at_a_delim = ( has_reached_delim || has_reached_crnewl || has_reached_newl || has_reached_only_cr || has_reached_eos );
+				// if quot_count != 0, then has_reached_delim = FALSE
+				// quot_count == 0 && has_reached_delim
+				// if quot_count is odd, tn
+
+				is_at_a_delim = ( (quot_count == 0 && has_reached_delim) || (quot_count == 0 && has_reached_crnewl) || (quot_count == 0 && has_reached_newl) || (quot_count == 0 && has_reached_only_cr) || has_reached_eos );
 
 				if ( is_at_a_delim ){
 					cur_delim_pos = cur_pos;
@@ -1146,7 +1176,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 				// it has reached the end of the line
 				// fgets only gets to newline so we know we have reached end of the buffer
-				if ( has_reached_newl || has_reached_only_cr || has_reached_crnewl || has_reached_eof || (parsing_string && has_reached_eos) ){
+				if ( ( quot_count == 0 && has_reached_newl ) || ( quot_count == 0 && has_reached_only_cr ) || ( quot_count == 0 && has_reached_crnewl ) || has_reached_eof || (parsing_string && has_reached_eos) ){
 					// we have gotten to the end of a line
 					// append the currernt row
 					if ( verbose ){

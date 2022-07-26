@@ -112,7 +112,7 @@ def run_test_set():
 	test_results = []
 	for file in os.listdir( 'inputs' ):
 		print('Running Test {}...'.format(test_count))
-		test_name = "{}_test_{}".format(os.path.splitext(file)[0], test_count)
+		test_name = "test_{}_{}".format(test_count, os.path.splitext(file)[0])
 
 		input_csv_file = os.path.join( 'inputs', file)
 
@@ -176,11 +176,13 @@ def main():
 	# testing the result
 	#run_c_parser( "..\\addresses.csv", "test_output.txt" )
 
-	#run_python_parser( "..\\addresses.csv", "test_output.txt" )
+	#run_python_parser( "inputs\\my_escaped_quotes.csv", "test_output.txt" )
 
 	#run_test( "..\\addresses.csv", "test_output.txt" )
 
 	test_results = run_test_set()
+
+	print('Results:')
 
 	print_test_results(test_results, only_failures=True)
 

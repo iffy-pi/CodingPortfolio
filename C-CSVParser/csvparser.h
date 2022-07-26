@@ -36,6 +36,24 @@ struct csv_table {
 	struct csv_row * row_list_tail;
 };
 
+// /* Store specific settings */
+// struct csv_parser_settings {
+// 	/* The delimiter, default is ',' */
+// 	char delim;
+	
+// 	/* Quotation character used in csv, either " or ', default is " */
+// 	char quot_character;
+
+// 	 When parsing structure, remove leading and trailing spaces from parsed cells. FALSE by default 
+// 	int strip_spaces;
+
+// 	/* If cell is empty (after stripping if set), it is not added to returned structure. FALSE by default */
+// 	int discard_empty_cells;
+
+// 	/* Newline counts as a delimiter
+// 	int split_by_newlines;
+// };
+
 int mallocstrcpy(char ** dest, char * src, int len);
 char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes, int strip_spaces, int free_string);
 
