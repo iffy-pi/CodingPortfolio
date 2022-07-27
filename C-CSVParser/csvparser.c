@@ -923,8 +923,6 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 	int parsing_string = ( string != NULL ) && ( string_len > 0);
 	int parsing_file = ( csv_file != NULL);
 
-	verbose = TRUE;
-
 	if ( parsing_file == parsing_string ){
 		// they are both 0 or they are both one
 		// in both cases we cant decide what to parse, return null;
@@ -940,7 +938,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 		bufflen = string_len;
 	} else {
 		// parsing file
-		bufflen = 4;
+		bufflen = 100;
 		buffer = (char *) malloc(bufflen * sizeof(char));
 	}
 

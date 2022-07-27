@@ -178,17 +178,17 @@ def print_test_results(test_results, only_failures=False):
 
 def main():
 	# testing the result
-	run_c_parser( "inputs\\quotes_and_newlines.csv", "test_output.txt" )
+	# run_c_parser( "inputs\\quotes_and_newlines.csv", "test_output.txt" )
 
 	#run_python_parser( "inputs\\my_escaped_quotes.csv", "test_output.txt" )
 
 	# run_test( "..\\addresses.csv", "test_output.txt" )
 
-	# test_results = run_test_set()
+	test_results = run_test_set()
 
-	# print('Results:')
+	print('Results:')
 
-	# print_test_results(test_results, only_failures=True)
+	print_test_results(test_results, only_failures=True)
 
 
 if __name__ == "__main__":
