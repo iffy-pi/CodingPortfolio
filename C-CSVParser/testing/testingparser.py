@@ -107,6 +107,10 @@ def run_test( input_csv_file, output_file_desc ):
 	
 
 def run_test_set():
+
+	for file in os.listdir('results'):
+		os.remove( os.path.join('results', file))
+
 	test_count = 1
 
 	test_results = []
@@ -174,17 +178,17 @@ def print_test_results(test_results, only_failures=False):
 
 def main():
 	# testing the result
-	#run_c_parser( "..\\addresses.csv", "test_output.txt" )
+	run_c_parser( "inputs\\quotes_and_newlines.csv", "test_output.txt" )
 
 	#run_python_parser( "inputs\\my_escaped_quotes.csv", "test_output.txt" )
 
-	#run_test( "..\\addresses.csv", "test_output.txt" )
+	# run_test( "..\\addresses.csv", "test_output.txt" )
 
-	test_results = run_test_set()
+	# test_results = run_test_set()
 
-	print('Results:')
+	# print('Results:')
 
-	print_test_results(test_results, only_failures=True)
+	# print_test_results(test_results, only_failures=True)
 
 
 if __name__ == "__main__":

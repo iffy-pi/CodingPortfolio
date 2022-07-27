@@ -923,6 +923,8 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 	int parsing_string = ( string != NULL ) && ( string_len > 0);
 	int parsing_file = ( csv_file != NULL);
 
+	verbose = TRUE;
+
 	if ( parsing_file == parsing_string ){
 		// they are both 0 or they are both one
 		// in both cases we cant decide what to parse, return null;
@@ -938,7 +940,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 		bufflen = string_len;
 	} else {
 		// parsing file
-		bufflen = 10;
+		bufflen = 4;
 		buffer = (char *) malloc(bufflen * sizeof(char));
 	}
 
@@ -1135,9 +1137,13 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 					append_this_cell = TRUE;
 					
-					// if this is the last line and the line is not complete
-					// then we do not strip or discard since the line can be merged in the next iteration
-					if ( !entire_cur_line_in_buffer && buffer[cur_word_end_pos] == '\0'){
+					// do not strip quotes or spaces if this is the last word in the buffer and the line is not complete
+					// last word in the buffer: buffer[cur_word_end_pos] == '\0'
+					// line is not complete: !entire_cur_line_in_buffer
+					// if quot_count is odd, then the newline is part of the cell so the entire line is not in buffer
+					// unless this buffer is the final buffer for the file (feof is true)
+					// this does not apply for regular string since buffer contains entire line
+					if (  parsing_file && (!( (quot_count == 0 && entire_cur_line_in_buffer) || feof(csv_file) ) && buffer[cur_word_end_pos] == '\0')){
 						if ( !merging_cells ) mallocstrcpy( &cur_cell->str, cur_word, cur_word_len);
 					} else {
 						// not the last word in buffer without entire line
