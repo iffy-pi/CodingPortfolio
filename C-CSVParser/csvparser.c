@@ -31,35 +31,30 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 	int new_word_start_pos = 0;
 	int new_word_end_pos = len;
 
-	// remove the original quotes if present
 	if ( strip_quotes && string[new_word_start_pos] == '"' && string[new_word_end_pos-1] == '"') {
-
 		new_word_start_pos++;
 		new_word_end_pos--;
 	}
 
 
-	// go through the word and find the beginning of non space character
+	// remove leading / trailing spaces
 	while(strip_spaces && new_word_end_pos != new_word_start_pos && string[new_word_end_pos-1] == ' ' ) new_word_end_pos--;
 	while(strip_spaces && new_word_start_pos != new_word_end_pos && string[new_word_start_pos] == ' ') new_word_start_pos++;
 
-	// now we have our range subtract to get new word length and allocate on the heap
-	int new_wordlen = new_word_end_pos - new_word_start_pos;
 
+	int new_wordlen = new_word_end_pos - new_word_start_pos;
 	char *new_string = (char *)malloc( (new_wordlen+1) * sizeof(char));
 
-	// copy the words over
 	int place_character;
 	int new_string_indx = 0;
 	int quot_count = 0;
 
 	for(int old_string_indx=new_word_start_pos; old_string_indx < new_word_end_pos; old_string_indx++){
-		// if the current character is quote and previous character is not quote, then dont add the quote
+		
+		// remove quotes unless escaped i.e. for '""' result is '"' and for '""""' result is '""'=
 		place_character = TRUE;
 		if ( string[old_string_indx] == '"' ){
-
-			// quot can only be placed if it is escaped, i.e. for '""' result is '"' and for '""""' result is '""'
-			// quots must be removed if
+			// quots must not be placed if
 			// quot appears at the beginning of the word (there is no quot behind it)
 			// previous character is not a quot
 			// previous character is a quot but not an even quot count, indicates it was used as escape for another quot
@@ -73,10 +68,8 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 		}
 	}
 
-	for( new_string_indx=new_string_indx; new_string_indx < new_wordlen; new_string_indx++){
-		// populate the remaining spaces with null terminator?, this may not be safe
-		new_string[new_string_indx] = '\0';
-	}
+	// populate the remaining spaces with null terminator?, this may not be safe
+	for( new_string_indx=new_string_indx; new_string_indx < new_wordlen; new_string_indx++) new_string[new_string_indx] = '\0';
 	new_string[new_wordlen] = '\0';
 
 	if (free_string) free(string);
@@ -992,10 +985,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 
 			if (verbose) printf("---------------------------------->\n");
 
-			if ( parsing_string ){
-				// parsing string, buffer has all lines in the file
-				entire_cur_line_in_buffer = TRUE;
-			} else {
+			if ( parsing_file ) {
 				// read an entire line
 				// last char is null and second last char is null (entire line read and buffer not full)
 				// or
@@ -1010,9 +1000,10 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				// curline_finished used to store if the current line was read entirely
 
 				entire_cur_line_in_buffer = ( second_last_char == '\0' || second_last_char == '\n' || feof(csv_file));
-			}
 
-			// parse the buffer character by character as usual
+			} else entire_cur_line_in_buffer = TRUE;
+
+			// parse the buffer character by character
 			cur_pos = 0;
 			cur_word_start_pos = 0;
 			first_word_for_buffer_parsed = FALSE;
@@ -1023,7 +1014,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				has_reached_crnewl =  ( buffer[cur_pos] == '\r' && buffer[cur_pos+1] == '\n');
 				has_reached_newl = ( buffer[cur_pos] == '\n' );
 				has_reached_only_cr = ( buffer[cur_pos] == '\r' && !has_reached_crnewl );
-				
+
 				has_reached_eos = ( buffer[cur_pos] == '\0' || cur_pos == bufflen-1);
 				has_reached_eof = ( parsing_file && has_reached_eos && feof(csv_file) );
 
@@ -1133,9 +1124,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				}
 
 				// it has reached the end of the line
-				// fgets only gets to newline so we know we have reached end of the buffer
 				if ( (!within_quotes && (has_reached_newl || has_reached_only_cr || has_reached_crnewl)) || has_reached_eof || (parsing_string && has_reached_eos) ){
-					// append the currernt row
 					if ( verbose ){
 						printf("===============================\n");
 						printf("Final Row:\n");
@@ -1143,12 +1132,11 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 						printf("===============================\n");
 					}
 
+					
 					if( cur_row != NULL ) map_row_into_csv_table(table, cur_row);
 
-
+					// reset quotes and rows for next line
 					cur_row = NULL;
-
-					// reset the quot count for next line
 					within_quotes = 0;
 
 					if ( has_reached_eos || has_reached_eof ) break;
@@ -1193,7 +1181,7 @@ struct csv_table * parse_string_to_csv_table(char * string, char delim, int stri
 }
 
 struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells){
-	// use the parse char array function for table and just gets the first table
+	// use the parse char array function for table and just gets the first row
 
 	struct csv_table * table = parse_char_array_to_csv_table(arr, arrlen, delim, strip_spaces, discard_empty_cells);
 
@@ -1201,14 +1189,11 @@ struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim,
 		return NULL;
 	}
 
-	// obtain the first row and unmap it from the table
-	struct csv_row *parsed_row = pop_row_from_csv_table(table, 0);
+	struct csv_row *first_row = pop_row_from_csv_table(table, 0);
 
-	// free the parsed table, we wont free the row since we unmapped it
 	free_csv_table(table);
 
-	// return the parsed row
-	return parsed_row;
+	return first_row;
 }
 
 struct csv_row * parse_string_to_csv_row(char * string, char delim, int strip_spaces, int discard_empty_cells){
