@@ -37,7 +37,7 @@ struct csv_table {
 };
 
 int mallocstrcpy(char ** dest, char * src, int len);
-char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes, int strip_spaces, int free_string);
+char * malloc_strip_quotes_and_spaces(char  * string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string);
 
 /* Allocate csv structures on the heap, anything allocated should be deallocated with free functions */
 struct csv_cell * new_csv_cell();
@@ -142,6 +142,7 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 /* Either parses file or string */
 /*
 	delim				: what should be used as the delimiter
+	quot_char			: What is used as the quote character, either '"' or '''
 	strip_spaces 		: if TRUE, trims cell strings of trailing spaces and leading spaces
 	discard_empty_cells : if TRUE, any cells with empty string (after stripping) will not be put into returned structure
 
@@ -163,18 +164,18 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 	if an error occurs while reading the file, function will return NULL
 
 */
-struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells, int verbose);
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells, int verbose);
 
 /* Parse character array or string into csv_table, parse_string calls parse_char_array with strlen(string)+1 as arrlen */
-struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells);
-struct csv_table * parse_string_to_csv_table(char * string, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_string_to_csv_table(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
 
 /* Parse character array or string into csv_row, parse_string calls parse_char_array with strlen(string)+1 as arrlen */
-struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells);
-struct csv_row * parse_string_to_csv_row(char * string, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
+struct csv_row * parse_string_to_csv_row(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
 
 /* Parses a file pointer into csv_table */
-struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * parse_file_to_csv_table(FILE * fileptr, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
 
 /* Opens the specified file and parses it into csv_table */ 
-struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int strip_spaces, int discard_empty_cells);
+struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, char quot_char, int strip_spaces, int discard_empty_cells);

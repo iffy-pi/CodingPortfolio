@@ -21,17 +21,19 @@ int mallocstrcpy(char ** dest, char * src, int len){
 	return 0;
 }
 
-char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes, int strip_spaces, int free_string){
+char * malloc_strip_quotes_and_spaces(char  * string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string){
 	// strips string of leading and trailing spaces
 	// returns a pointer to the stripped string, allocated using malloc
 	// option to free old string as parameter
+
+	// quot_char is either '"' or '''
 
 	if ( string == NULL ) return NULL;
 
 	int new_word_start_pos = 0;
 	int new_word_end_pos = len;
 
-	if ( strip_quotes && string[new_word_start_pos] == '"' && string[new_word_end_pos-1] == '"') {
+	if ( strip_quotes && string[new_word_start_pos] == quot_char && string[new_word_end_pos-1] == quot_char) {
 		new_word_start_pos++;
 		new_word_end_pos--;
 	}
@@ -53,13 +55,13 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, int strip_quotes,
 		
 		// remove quotes unless escaped i.e. for '""' result is '"' and for '""""' result is '""'=
 		place_character = TRUE;
-		if ( string[old_string_indx] == '"' ){
+		if ( string[old_string_indx] == quot_char ){
 			// quots must not be placed if
 			// quot appears at the beginning of the word (there is no quot behind it)
 			// previous character is not a quot
 			// previous character is a quot but not an even quot count, indicates it was used as escape for another quot
 			quot_count = (quot_count + 1) % 2;
-			if ( old_string_indx == new_word_start_pos || string[old_string_indx-1] != '"' || string[old_string_indx-1] == '"' && quot_count == 1 ) place_character = FALSE;
+			if ( old_string_indx == new_word_start_pos || string[old_string_indx-1] != quot_char || string[old_string_indx-1] == quot_char && quot_count == 1 ) place_character = FALSE;
 		}
 
 		if ( place_character ){
@@ -912,7 +914,7 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row){
 }
 
 
-struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells, int verbose){
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells, int verbose){
 	int parsing_string = ( arr != NULL ) && ( arrlen > 0);
 	int parsing_file = ( csv_file != NULL);
 
@@ -1023,7 +1025,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 				has_reached_eos = ( buffer[cur_pos] == '\0' || cur_pos == bufflen-1);
 				has_reached_eof = ( parsing_file && has_reached_eos && feof(csv_file) );
 
-				if ( buffer[cur_pos] == '"') within_quotes = (within_quotes+ 1) % 2;
+				if ( buffer[cur_pos] == quot_char) within_quotes = (within_quotes+ 1) % 2;
 
 				is_at_a_delim = (!within_quotes && (has_reached_delim || has_reached_newl || has_reached_only_cr || has_reached_crnewl)) || has_reached_eos;
 
@@ -1101,9 +1103,9 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 						if (verbose) printf("Stripping quotes and spaces\n");
 
 						if ( merging_cells){
-							cur_cell->str = malloc_strip_quotes_and_spaces(cur_cell->str, combined_str_len, TRUE, strip_spaces, TRUE);
+							cur_cell->str = malloc_strip_quotes_and_spaces(cur_cell->str, combined_str_len, quot_char, TRUE, strip_spaces, TRUE);
 						} else{
-							cur_cell->str = malloc_strip_quotes_and_spaces(cur_word, cur_word_len, TRUE, strip_spaces, FALSE);
+							cur_cell->str = malloc_strip_quotes_and_spaces(cur_word, cur_word_len, quot_char, TRUE, strip_spaces, FALSE);
 						}
 
 						append_this_cell = !discard_empty_cells || (discard_empty_cells && strlen(cur_cell->str) > 0);
@@ -1177,18 +1179,18 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 	return table;
 }
 
-struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_fileptr_or_char_array_to_csv_table(NULL, arr, arrlen, delim, strip_spaces, discard_empty_cells, FALSE);
+struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
+	return parse_fileptr_or_char_array_to_csv_table(NULL, arr, arrlen, delim, quot_char, strip_spaces, discard_empty_cells, FALSE);
 }
 
-struct csv_table * parse_string_to_csv_table(char * string, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_char_array_to_csv_table(string, strlen(string)+1, delim, strip_spaces, discard_empty_cells);
+struct csv_table * parse_string_to_csv_table(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
+	return parse_char_array_to_csv_table(string, strlen(string)+1, delim, quot_char, strip_spaces, discard_empty_cells);
 }
 
-struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells){
+struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
 	// use the parse char array function for table and just gets the first row
 
-	struct csv_table * table = parse_char_array_to_csv_table(arr, arrlen, delim, strip_spaces, discard_empty_cells);
+	struct csv_table * table = parse_char_array_to_csv_table(arr, arrlen, delim, quot_char, strip_spaces, discard_empty_cells);
 
 	if ( table == NULL || table->row_count == 0 ){
 		return NULL;
@@ -1201,15 +1203,15 @@ struct csv_row * parse_char_array_to_csv_row(char arr[], int arrlen, char delim,
 	return first_row;
 }
 
-struct csv_row * parse_string_to_csv_row(char * string, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_char_array_to_csv_row(string, strlen(string)+1, delim, strip_spaces, discard_empty_cells);
+struct csv_row * parse_string_to_csv_row(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
+	return parse_char_array_to_csv_row(string, strlen(string)+1, delim, quot_char, strip_spaces, discard_empty_cells);
 }
 
-struct csv_table * parse_file_to_csv_table(FILE * csv_file, char delim, int strip_spaces, int discard_empty_cells){
-	return parse_fileptr_or_char_array_to_csv_table(csv_file, NULL, 0, delim, strip_spaces, discard_empty_cells, FALSE);
+struct csv_table * parse_file_to_csv_table(FILE * csv_file, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
+	return parse_fileptr_or_char_array_to_csv_table(csv_file, NULL, 0, delim, quot_char, strip_spaces, discard_empty_cells, FALSE);
 }
 
-struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, int strip_spaces, int discard_empty_cells){
+struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, char quot_char, int strip_spaces, int discard_empty_cells){
 	// we open the file for them
 	FILE * csv_file = fopen(filename, "r");
 	if ( csv_file == NULL ) {
@@ -1217,7 +1219,7 @@ struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim,
 		exit(1);
 	}
 
-	struct csv_table * parsed_table = parse_file_to_csv_table(csv_file, delim, strip_spaces, discard_empty_cells);
+	struct csv_table * parsed_table = parse_file_to_csv_table(csv_file, delim, quot_char, strip_spaces, discard_empty_cells);
 
 	fclose(csv_file);
 
