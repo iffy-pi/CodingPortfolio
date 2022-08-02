@@ -11,7 +11,7 @@ core
 .*.swp
 
 # doc temp files
-~$*.docx
+~$*
 *.tmp
 #vs code directory
 .vscode

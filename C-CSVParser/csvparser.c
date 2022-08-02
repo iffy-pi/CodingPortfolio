@@ -300,6 +300,10 @@ void print_csv_table(struct csv_table * tableptr){
 }
 
 void populate_csv_cell_str(struct csv_cell * cell, char * string){
+	if ( cell->str != NULL ){
+		free(cell->str);
+	}
+
 	// copy the string with mallocstr copy
 	mallocstrcpy(&(cell->str), string, strlen(string));
 }
