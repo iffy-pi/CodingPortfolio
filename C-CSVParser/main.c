@@ -3,17 +3,44 @@
 
 int main(){
 
-	//char *string = "\"ha \"\"ha\"\" ha\"";
+	// struct csv_table *table = open_and_parse_file_to_csv_table("space_table.txt", ' ', FALSE, TRUE);
 
-	char * string =  "\"ha \"\"\"\"ha\"\"\"\" ha\"";
+	// print_csv_table(table);
 
-	char *stripped = malloc_strip_quotes_and_spaces_exp(string, strlen(string), TRUE, TRUE, FALSE);
+	int bufflen = 200;
+	char buffer[200];
 
-	printf("String: %s\n", string);
-	printf("Expected: ha \"ha\" ha\n");
-	printf("Stripped: %s\n", stripped);
+	FILE *csv_file = fopen("tab_table.txt", "r");
 
-	free(stripped);
+	if ( !csv_file ) {
+		printf("Could not open file!\n");
+		exit(1);
+	}
+
+	fgets(buffer, bufflen, csv_file);
+
+	int i=0;
+	while (TRUE){
+
+		if ( buffer[i] == '\t' ) printf("\\t");
+		else if ( buffer[i] == '\n' ) printf("\\n");
+		else if ( buffer[i] == '\r' ) printf("\\r");
+		else if ( buffer[i] == '\0' ) printf("\\0");
+		else printf("%c", buffer[i]);
+
+		if ( buffer[i] == '\0' ) {
+			printf("\n");
+			break;
+		}
+		i++;
+	}
+
+	fclose(csv_file);
+
+	struct csv_table *table = open_and_parse_file_to_csv_table("tab_table.txt", '\t', FALSE, TRUE);
+
+	print_csv_table(table);
+
 
 	return 0;
 }

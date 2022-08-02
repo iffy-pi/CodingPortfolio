@@ -150,19 +150,20 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 	discard_empty_cells = TRUE
 
 	csv_file			: File pointer to CSV file to parse, set to NULL if you want to parse the character array
-	string 				: The character array you want to parse, set to NULL if you want to parse the CSV file
-	string_len 			: The size of the character array, set to 0 if you want to parse the CSV file
+	arr 				: The character array you want to parse, set to NULL if you want to parse the CSV file
+	arrlen 			: The size of the character array, set to 0 if you want to parse the CSV file
 
-	Can only parse either string or file, not both
-	if ( csv_file == NULL && (string == NULL || string_len < 0)) function will return NULL
-	if ( csv_file != NULL && (string == NULL || string_len < 0)) function will return parsed csv for csv_file
-	if ( csv_file == NULL && (string != NULL && string_len > 0)) function will return parsed csv for character array string
-	if ( csv_file != NULL && (string != NULL && string_len > 0)) function will return NULL
+	Can only parse either arr or file, not both
+	if ( csv_file != NULL && (arr == NULL || arrlen < 0)) function will return parsed csv for csv_file
+	if ( csv_file == NULL && (arr != NULL && arrlen > 0)) function will return parsed csv for character array
+	
+	if ( csv_file == NULL && (arr == NULL || arrlen < 0)) function will return NULL
+	if ( csv_file != NULL && (arr != NULL && arrlen > 0)) function will return NULL
 
 	if an error occurs while reading the file, function will return NULL
 
 */
-struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char string[], int string_len, char delim, int strip_spaces, int discard_empty_cells, int verbose);
+struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells, int verbose);
 
 /* Parse character array or string into csv_table, parse_string calls parse_char_array with strlen(string)+1 as arrlen */
 struct csv_table * parse_char_array_to_csv_table(char arr[], int arrlen, char delim, int strip_spaces, int discard_empty_cells);

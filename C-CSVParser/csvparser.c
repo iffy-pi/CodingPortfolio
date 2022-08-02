@@ -919,6 +919,11 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 	if ( parsing_file == parsing_string )
 		return NULL;
 
+	if ( delim == ' '){
+		strip_spaces = FALSE;
+		discard_empty_cells = TRUE;
+	}
+
 	// buffer for fgets
 	char * buffer;
 	int bufflen;
