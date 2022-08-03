@@ -347,7 +347,7 @@ void pretty_print_csv_table(struct csv_table *tableptr){
 
 }
 
-void really_pretty_print_csv_table(struct csv_table *tableptr){
+void super_pretty_print_csv_table(struct csv_table *tableptr){
 	if ( tableptr == NULL ) {
 		printf("(null)\n");
 		return;

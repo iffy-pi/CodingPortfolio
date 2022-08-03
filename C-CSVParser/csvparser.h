@@ -58,7 +58,7 @@ void print_csv_table(struct csv_table * tableptr);
 /* Prints cells/rows of row/table in more organized format*/
 void pretty_print_csv_row(struct csv_row* rowptr);
 void pretty_print_csv_table(struct csv_table * tableptr);
-void really_pretty_print_csv_table(struct csv_table *tableptr);
+void super_pretty_print_csv_table(struct csv_table *tableptr);
 
 
 /* Performs a deep copy of the specified parameters and returns a pointer to the new object */

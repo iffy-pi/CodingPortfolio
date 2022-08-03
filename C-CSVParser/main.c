@@ -68,7 +68,7 @@ int main(){
 	printf("\n\n");
 	pretty_print_csv_table(t1);
 	printf("\n\n");
-	really_pretty_print_csv_table(t1);
+	super_pretty_print_csv_table(t1);
 
 	return 0;
 }
