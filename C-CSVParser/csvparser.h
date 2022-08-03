@@ -21,7 +21,7 @@ struct csv_cell {
 };
 
 struct csv_row {
-	int cell_count;
+	int length;
 	//pointers for head and tail of cell list
 	struct csv_cell * list_head;
 	struct csv_cell * list_tail;

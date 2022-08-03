@@ -97,7 +97,7 @@ struct csv_cell * new_csv_cell_from_str(char * string){
 
 struct csv_row * new_csv_row(){
 	struct csv_row * rowptr = (struct csv_row *) malloc( sizeof(struct csv_row) );
-	rowptr->cell_count = 0;
+	rowptr->length = 0;
 	rowptr->list_head = NULL;
 	rowptr->list_tail = NULL;
 	rowptr->parent = NULL;
@@ -147,7 +147,7 @@ void free_csv_row(struct csv_row * rowptr){
 
 		// free the previous current cell
 		free_csv_cell(cur_cell->prev);
-		rowptr->cell_count--;
+		rowptr->length--;
 	}
 
 	// will break when we are at tail
@@ -160,10 +160,10 @@ void free_csv_row(struct csv_row * rowptr){
 		}
 
 		free_csv_cell(rowptr->list_tail);
-		rowptr->cell_count--;
+		rowptr->length--;
 	}
 
-	if ( rowptr->cell_count != 0) {
+	if ( rowptr->length != 0) {
 		printf("Missing cells somewhere!");
 		exit(1);
 	}
@@ -246,11 +246,11 @@ void print_csv_row_w_params(struct csv_row * rowptr, int print_newline){
 
 	printf("[");
 
-	for(int i=0; i < rowptr->cell_count; i++){
+	for(int i=0; i < rowptr->length; i++){
 
 		print_csv_cell_w_params(cur_cell, FALSE);
 
-		if ( i != rowptr->cell_count-1)
+		if ( i != rowptr->length-1)
 			printf(", ");
 
 		cur_cell = cur_cell->next;
@@ -303,12 +303,12 @@ void pretty_print_csv_row(struct csv_row* rowptr){
 
 	printf("[\n");
 
-	for(int i=0; i < rowptr->cell_count; i++){
+	for(int i=0; i < rowptr->length; i++){
 
 		printf("\t");
 		print_csv_cell_w_params(cur_cell, FALSE);
 
-		if ( i != rowptr->cell_count-1)
+		if ( i != rowptr->length-1)
 			printf(",");
 
 		printf("\n");
@@ -364,11 +364,11 @@ void super_pretty_print_csv_table(struct csv_table *tableptr){
 
 		cur_cell = cur_row->list_head;
 
-		for(int j=0; j < cur_row->cell_count; j++){
+		for(int j=0; j < cur_row->length; j++){
 			printf("\t\t");
 			print_csv_cell_w_params(cur_cell, FALSE);
 
-			if ( j != cur_row->cell_count-1)
+			if ( j != cur_row->length-1)
 				printf(",");
 
 			printf("\n");
@@ -446,14 +446,14 @@ int csv_row_equals(struct csv_row * row1, struct csv_row * row2){
 	else if ( row1 == NULL || row2 == NULL) return FALSE;
 
 	//check the row count
-	if ( row1->cell_count != row2->cell_count ) return FALSE;
+	if ( row1->length != row2->length ) return FALSE;
 
 	int different = FALSE;
 
 	struct csv_cell *cur_cell1, *cur_cell2;
 
 	// compare each individual cell, break if there is a difference found
-	for ( int i=0; i < row1->cell_count && !different; i++ ){
+	for ( int i=0; i < row1->length && !different; i++ ){
 		cur_cell1 = get_cell_ptr_in_csv_row( row1, i);
 		cur_cell2 = get_cell_ptr_in_csv_row( row2, i);
 
@@ -487,7 +487,7 @@ int csv_table_equals(struct csv_table * table1, struct csv_table * table2){
 }
 
 struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row * row, int index){
-	if( row == NULL || row->cell_count == 0 || index >= row->cell_count || index < 0 ) return NULL;
+	if( row == NULL || row->length == 0 || index >= row->length || index < 0 ) return NULL;
 
 	struct csv_cell * cur_cell = row->list_head;
 
@@ -543,7 +543,7 @@ struct csv_cell * get_cell_clone_in_csv_table(struct csv_table * table, int rowi
 }
 
 struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row * row, char * string){
-	if ( row == NULL || row->cell_count == 0 ) return NULL;
+	if ( row == NULL || row->length == 0 ) return NULL;
 
 	int found_match = FALSE;
 
@@ -580,14 +580,14 @@ struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table * table, char *
 }
 
 int get_cell_coord_in_csv_row(struct csv_row * row, struct csv_cell * cell){
-	if ( cell == NULL || row == NULL || row->cell_count == 0 ) return -1;
+	if ( cell == NULL || row == NULL || row->length == 0 ) return -1;
 
 	int indx;
 	struct csv_cell * cur_cell = row->list_head;
 
 	int found_match = FALSE;
 
-	for( indx=0; indx < row->cell_count; indx++ ){
+	for( indx=0; indx < row->length; indx++ ){
 
 		// if they are the same then the index is the match
 		found_match = csv_cell_equals(cur_cell, cell);
@@ -598,7 +598,7 @@ int get_cell_coord_in_csv_row(struct csv_row * row, struct csv_cell * cell){
 	}
 
 	// went through the list and found no match
-	if ( indx == row->cell_count ) return -1;
+	if ( indx == row->length ) return -1;
 
 	return indx;
 }
@@ -663,7 +663,7 @@ int get_str_coord_in_csv_table(struct csv_table * table, char * string, int * ro
 int is_cell_mapped_to_csv_row(struct csv_row * row, struct csv_cell * cellptr){
 	// checks if the specified cell is in the csv row
 
-	if ( row == NULL || cellptr == NULL || row->cell_count == 0 ) return FALSE;
+	if ( row == NULL || cellptr == NULL || row->length == 0 ) return FALSE;
 
 	int found_match = FALSE;
 
@@ -747,7 +747,7 @@ void map_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
 	}
 
 	// incremenet elementcount
-	rowptr->cell_count++;
+	rowptr->length++;
 }
 
 void map_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr){
@@ -784,7 +784,7 @@ int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell,
 	struct csv_cell *ptr_cell = get_cell_ptr_in_csv_row(row, index);
 
 	if ( ptr_cell == NULL ){
-		if ( row->cell_count == index){
+		if ( row->length == index){
 			// just appending to the end no problem
 			map_cell_into_csv_row( row, new_cell);
 			return 0;
@@ -796,7 +796,7 @@ int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell,
 	struct csv_cell *ptr_prev = ptr_cell->prev;
 	struct csv_cell *ptr_next = ptr_cell->next;
 
-	if ( row->cell_count == 1){
+	if ( row->length == 1){
 		// there is only one item, ptr cell is both head and tail
 		// current cell pushes ptr cell one up therefore
 
@@ -822,7 +822,7 @@ int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell,
 	}
 
 	new_cell->parent = row;
-	row->cell_count++;
+	row->length++;
 
 	return 0;
 
@@ -999,7 +999,7 @@ void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr){
 	cellptr->prev = NULL;
 
 	//decrement element count
-	row->cell_count--;
+	row->length--;
 }
 
 void unmap_row_in_csv_table(struct csv_table * table, struct csv_row *  rowptr){
@@ -1291,10 +1291,10 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 						// we made a complete line sometime before, reset it here
 						cur_row = new_csv_row();
 
-					} else if ( cur_row->cell_count > 0 && !first_word_for_buffer_parsed ){
+					} else if ( cur_row->length > 0 && !first_word_for_buffer_parsed ){
 						// if this is false that means this is the first word,
 						// we need to combine it with the last word in the cur row
-						last_cell = get_cell_ptr_in_csv_row(cur_row, cur_row->cell_count-1);
+						last_cell = get_cell_ptr_in_csv_row(cur_row, cur_row->length-1);
 						last_word_len = strlen(last_cell->str);
 
 						if (verbose) printf("Merging: \"%s\" + $cur_word\n", last_cell->str);
