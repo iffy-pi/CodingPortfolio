@@ -10,24 +10,33 @@ def run_c_parser( input_file_addr, output_file_addr ):
 		child.wait()
 		child.kill()
 
+def get_row_string(row):
+	row_str = None
+	for cell in row:
+		if not row_str:
+			row_str = '["{}"'.format(cell)
+		else:
+			row_str += ', "{}"'.format(cell)
+
+	row_str += ']'
+
+	return row_str
+
 def run_python_parser(input_file_addr, output_file_addr):
 	with open( input_file_addr, 'r' ) as csv_file:
 		python_csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
 
+		table_str = None
+		for row in python_csv_reader:
+			if not table_str:
+				table_str = '[{}'.format(get_row_string(row))
+			else:
+				table_str += ', {}'.format(get_row_string(row))
+
+		table_str += ']'
+
 		with open(output_file_addr, 'w' ) as output_file:
-			output_file.write('[\n')
-			for row in python_csv_reader:
-				row_str = None
-				for cell in row:
-					if not row_str:
-						row_str = '["{}"'.format(cell)
-					else:
-						row_str = row_str + ', ' + '"{}"'.format(cell)
-
-				row_str += ']'
-
-				output_file.write(row_str+'\n')
-			output_file.write(']\n')
+			output_file.write('{}\n'.format(table_str))
 
 def make_output_file_name(desc, is_c=False, is_python=False):
 	if is_c:

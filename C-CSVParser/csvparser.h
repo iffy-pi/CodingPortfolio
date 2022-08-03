@@ -48,11 +48,18 @@ void free_csv_cell(struct csv_cell * cellptr);
 void free_csv_row(struct csv_row * rowptr);
 void free_csv_table(struct csv_table * tableptr);
 
+void populate_csv_cell_str(struct csv_cell * cell, char * string);
+
+/* Print the contents of a CSV structure */
 void print_csv_cell(struct csv_cell * cellptr );
 void print_csv_row(struct csv_row * rowptr);
 void print_csv_table(struct csv_table * tableptr);
 
-void populate_csv_cell_str(struct csv_cell * cell, char * string);
+/* Prints cells/rows of row/table in more organized format*/
+void pretty_print_csv_row(struct csv_row* rowptr);
+void pretty_print_csv_table(struct csv_table * tableptr);
+void really_pretty_print_csv_table(struct csv_table *tableptr);
+
 
 /* Performs a deep copy of the specified parameters and returns a pointer to the new object */
 struct csv_cell * clone_csv_cell(struct csv_cell * cell);

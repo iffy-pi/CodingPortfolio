@@ -217,88 +217,6 @@ void free_csv_table(struct csv_table * tableptr){
 	tableptr=NULL;
 }
 
-void print_csv_cell(struct csv_cell * cellptr ){
-	if (cellptr ==  NULL ){
-		printf("(null)");
-		return;
-	}
-	printf("\"%s\"",cellptr->str);
-}
-
-void print_csv_row(struct csv_row * rowptr){
-
-	if (rowptr == NULL ){
-		printf("(null)");
-		return;
-	}
-
-	int printed = 0;
-
-	struct csv_cell * cur_cell = rowptr->cell_list_head;
-	printf("[");
-	while ( cur_cell != NULL && cur_cell->next != NULL ){
-		// while there is a next cell
-		// so we will break when we reach tail cell
-
-		print_csv_cell(cur_cell);
-		printf(", ");
-		printed++;
-
-		// move up the list
-		cur_cell = cur_cell->next;
-	}
-
-	if (rowptr->cell_list_tail != NULL ) {
-		print_csv_cell(rowptr->cell_list_tail);
-		printed++;
-	}
-
-	printf("]\n");
-
-	if (printed != rowptr->cell_count) {
-		printf("Unbalanced!\n");
-		exit(1);
-	}
-}
-
-void print_csv_table(struct csv_table * tableptr){
-	if ( tableptr == NULL ) {
-		printf("(null)\n");
-		return;
-	}
-
-	int printed = 0;
-
-	struct csv_row * cur_row = tableptr->row_list_head;
-
-	printf("[\n");
-
-	while ( cur_row != NULL && cur_row->next != NULL ){
-		// while there is a next cell
-		// so we will break when we reach tail cell
-
-		print_csv_row(cur_row);
-		printed++;
-
-
-		// move up the list
-		cur_row = cur_row->next;
-	}
-
-	// will break when we are at tail
-	if (tableptr->row_list_tail != NULL ) {
-		print_csv_row(tableptr->row_list_tail);
-		printed++;
-	}
-
-	printf("]\n");
-
-	if ( tableptr->row_count != printed) {
-		printf("Missing rows somewhere!");
-		exit(1);
-	}
-}
-
 void populate_csv_cell_str(struct csv_cell * cell, char * string){
 	if ( cell->str != NULL ){
 		free(cell->str);
@@ -307,6 +225,170 @@ void populate_csv_cell_str(struct csv_cell * cell, char * string){
 	// copy the string with mallocstr copy
 	mallocstrcpy(&(cell->str), string, strlen(string));
 }
+
+void print_csv_cell_w_params(struct csv_cell *cellptr, int print_newline){
+	if (cellptr ==  NULL ){
+		printf("(null)");
+	} else printf("\"%s\"",cellptr->str);
+	
+
+	if (print_newline) printf("\n");
+}
+
+void print_csv_row_w_params(struct csv_row * rowptr, int print_newline){
+
+	if (rowptr == NULL ){
+		printf("(null)");
+		return;
+	}
+
+	struct csv_cell *cur_cell = rowptr->cell_list_head;
+
+	printf("[");
+
+	for(int i=0; i < rowptr->cell_count; i++){
+
+		print_csv_cell_w_params(cur_cell, FALSE);
+
+		if ( i != rowptr->cell_count-1)
+			printf(", ");
+
+		cur_cell = cur_cell->next;
+	}
+
+	printf("]");
+
+	if ( print_newline ) printf("\n");
+}
+
+void print_csv_cell(struct csv_cell * cellptr ){
+	print_csv_cell_w_params(cellptr, TRUE);
+}
+
+void print_csv_row(struct csv_row * rowptr){
+	print_csv_row_w_params(rowptr, TRUE);
+}
+
+void print_csv_table(struct csv_table * tableptr){
+	if ( tableptr == NULL ) {
+		printf("(null)\n");
+		return;
+	}
+
+	printf("[");
+
+	struct csv_row *cur_row = tableptr->row_list_head;
+
+	for(int i=0; i < tableptr->row_count; i++){
+
+		print_csv_row_w_params(cur_row, FALSE);
+
+		// if not the last one print comma
+		if ( i != tableptr->row_count-1)
+			printf(", ");
+
+		cur_row = cur_row->next;
+	}
+
+	printf("]\n");
+}
+
+void pretty_print_csv_row(struct csv_row* rowptr){
+	if (rowptr == NULL ){
+		printf("(null)");
+		return;
+	}
+
+	struct csv_cell *cur_cell = rowptr->cell_list_head;
+
+	printf("[\n");
+
+	for(int i=0; i < rowptr->cell_count; i++){
+
+		printf("\t");
+		print_csv_cell_w_params(cur_cell, FALSE);
+
+		if ( i != rowptr->cell_count-1)
+			printf(",");
+
+		printf("\n");
+
+		cur_cell = cur_cell->next;
+	}
+
+	printf("]\n");
+}
+
+void pretty_print_csv_table(struct csv_table *tableptr){
+	if ( tableptr == NULL ) {
+		printf("(null)\n");
+		return;
+	}
+
+	printf("[\n");
+
+	struct csv_row *cur_row = tableptr->row_list_head;
+
+	for(int i=0; i < tableptr->row_count; i++){
+
+		printf("\t");
+		print_csv_row_w_params(cur_row, FALSE);
+
+		// if not the last one print comma
+		if ( i != tableptr->row_count-1)
+			printf(",");
+
+		printf("\n");
+
+		cur_row = cur_row->next;
+	}
+
+	printf("]\n");
+
+}
+
+void really_pretty_print_csv_table(struct csv_table *tableptr){
+	if ( tableptr == NULL ) {
+		printf("(null)\n");
+		return;
+	}
+
+	printf("[\n");
+
+	struct csv_row *cur_row = tableptr->row_list_head;
+	struct csv_cell *cur_cell;
+
+	for(int i=0; i < tableptr->row_count; i++){
+
+		printf("\t[\n");
+
+		cur_cell = cur_row->cell_list_head;
+
+		for(int j=0; j < cur_row->cell_count; j++){
+			printf("\t\t");
+			print_csv_cell_w_params(cur_cell, FALSE);
+
+			if ( j != cur_row->cell_count-1)
+				printf(",");
+
+			printf("\n");
+			cur_cell = cur_cell->next;
+		}
+
+		printf("\t]");
+
+		// if not the last one print comma
+		if ( i != tableptr->row_count-1)
+			printf(",\n");
+
+		printf("\n");
+
+		cur_row = cur_row->next;
+	}
+
+	printf("]\n");
+}
+
 
 struct csv_cell * clone_csv_cell(struct csv_cell * cell){
 	if ( cell == NULL ) return NULL;
