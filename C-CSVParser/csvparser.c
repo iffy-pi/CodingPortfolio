@@ -100,7 +100,7 @@ struct csv_row * new_csv_row(){
 	rowptr->cell_count = 0;
 	rowptr->cell_list_head = NULL;
 	rowptr->cell_list_tail = NULL;
-	rowptr->parent_table = NULL;
+	rowptr->parent = NULL;
 	rowptr->prev = NULL;
 	rowptr->next = NULL;
 }
@@ -753,7 +753,7 @@ void map_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
 void map_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr){
 
 	// populate parent info
-	rowptr->parent_table = tableptr;
+	rowptr->parent = tableptr;
 
 	// add the row to the list
 	if ( tableptr->row_list_head == NULL ){
@@ -872,7 +872,7 @@ int map_row_to_coord_in_csv_table(struct csv_table *table, struct csv_row *new_r
 		new_row->next = ptr_row;
 	}
 
-	new_row->parent_table = table;
+	new_row->parent = table;
 	table->row_count++;
 
 	return 0;
@@ -1049,7 +1049,7 @@ void unmap_row_in_csv_table(struct csv_table * table, struct csv_row *  rowptr){
 	}
 
 	// remove any pointers
-	rowptr->parent_table = NULL;
+	rowptr->parent = NULL;
 	rowptr->next = NULL;
 	rowptr->prev = NULL;
 
@@ -1061,7 +1061,7 @@ void unmap_cell_in_csv_table(struct csv_table * table, struct csv_cell * cellptr
 	struct csv_row * rel_row = cellptr->parent;
 
 	// makes sure the cell is actually in the table
-	if ( rel_row == NULL || rel_row->parent_table != table ) return;
+	if ( rel_row == NULL || rel_row->parent != table ) return;
 
 	unmap_cell_in_csv_row( rel_row, cellptr);
 }
@@ -1144,7 +1144,7 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row){
 	// the current row is not NULL (would be for reloop on tail)
 	// and 
 	// the next pointer is not NULL or the next pointer is null and we are at the tail)
-	if ( cur_row != NULL && cur_row->parent_table != table ){
+	if ( cur_row != NULL && cur_row->parent != table ){
 		printf("Row is not a child of the specified table!!\n");
 		exit(1);
 	}

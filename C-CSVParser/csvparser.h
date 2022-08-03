@@ -24,7 +24,7 @@ struct csv_row {
 	struct csv_cell * cell_list_head;
 	struct csv_cell * cell_list_tail;
 
-	struct csv_table * parent_table; // points to its parent table
+	struct csv_table * parent; // points to its parent table
 	struct csv_row * next;
 	struct csv_row * prev;
 
