@@ -128,8 +128,9 @@ void add_cell_clone_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellpt
 void add_row_clone_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr);
 
 /* Add but at specific coordinates , same return type as map_to_coord */
-void add_cell_clone_at_coord_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index);
-void add_row_clone_at_coord_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index);
+int add_cell_clone_at_coord_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index);
+int add_row_clone_at_coord_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index);
+int add_cell_clone_at_coord_to_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx);
 
 /* Create new cell with word and add it to row, uses deep copy for copying word */
 void add_str_to_csv_row(struct csv_row * rowptr, char * word, int wordlen);

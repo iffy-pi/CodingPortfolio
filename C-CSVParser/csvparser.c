@@ -890,7 +890,9 @@ int map_cell_to_coord_in_csv_table(struct csv_table *table, struct csv_cell *new
 		if ( table->row_count == rowindx && colindx == 0 ){
 			// there is no row for it so we create a new row, in this case colindx must be 0
 			ref_row = new_csv_row();
-		} return -1;
+			map_row_into_csv_table(table, ref_row);
+
+		} else return -1;
 	}
 
 	// add the cell to the relevant location in the ref row
@@ -908,17 +910,17 @@ void add_row_clone_to_csv_table(struct csv_table * tableptr, struct csv_row * ro
 	map_row_into_csv_table(tableptr, rowptr);
 }
 
-void add_cell_clone_at_coord_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index){
+int add_cell_clone_at_coord_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index){
 	struct csv_cell *new_cell = clone_csv_cell(cellptr);
 	return map_cell_to_coord_in_csv_row(rowptr, new_cell, index);
 }
 
-void add_row_clone_at_coord_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index){
+int add_row_clone_at_coord_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index){
 	struct csv_row *new_row = clone_csv_row(rowptr);
 	return map_row_to_coord_in_csv_table(tableptr, new_row, index);
 }
 
-void add_cell_clone_at_coord_to_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx){
+int add_cell_clone_at_coord_to_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx){
 	struct csv_cell *new_cell = clone_csv_cell(cellptr);
 	return map_cell_to_coord_in_csv_table(tableptr, new_cell, rowindx, colindx);
 }
