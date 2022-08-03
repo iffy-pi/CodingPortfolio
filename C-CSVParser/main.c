@@ -67,13 +67,13 @@ int main(){
 
 	struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
 
-	map_cell_to_coord_in_csv_row(r3, c5, 2);
+	insmap_cell_into_csv_row(r3, c5, 2);
 
-	map_row_to_coord_in_csv_table(t1, r3, 1);
+	insmap_row_into_csv_table(t1, r3, 1);
 
 	struct csv_cell *c6 = new_csv_cell_from_str("Cell6");
 
-	int result = map_cell_to_coord_in_csv_table(t1, c6, 2, 2);
+	int result = insmap_cell_into_csv_table(t1, c6, 2, 2);
 
 	printf("Result: %d\n", result);
 
