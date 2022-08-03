@@ -99,7 +99,7 @@ struct csv_row * new_csv_row(){
 	struct csv_row * rowptr = (struct csv_row *) malloc( sizeof(struct csv_row) );
 	rowptr->cell_count = 0;
 	rowptr->list_head = NULL;
-	rowptr->cell_list_tail = NULL;
+	rowptr->list_tail = NULL;
 	rowptr->parent = NULL;
 	rowptr->prev = NULL;
 	rowptr->next = NULL;
@@ -152,14 +152,14 @@ void free_csv_row(struct csv_row * rowptr){
 
 	// will break when we are at tail
 	// now just have to free it
-	if (rowptr->cell_list_tail != NULL ) {
+	if (rowptr->list_tail != NULL ) {
 		if (VERBOSE){
 			printf("Freeing: ");
-			print_csv_cell(rowptr->cell_list_tail);
+			print_csv_cell(rowptr->list_tail);
 			printf("\n");
 		}
 
-		free_csv_cell(rowptr->cell_list_tail);
+		free_csv_cell(rowptr->list_tail);
 		rowptr->cell_count--;
 	}
 
@@ -734,15 +734,15 @@ void map_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
 		rowptr->list_head = cellptr;
 
 		// also assign the tail
-		rowptr->cell_list_tail = cellptr;
+		rowptr->list_tail = cellptr;
 
 	} else {
 		// not the first item, append to the end of the list
 		// and then make it the new tail
 
-		rowptr->cell_list_tail->next = cellptr;
-		cellptr->prev = rowptr->cell_list_tail;
-		rowptr->cell_list_tail = cellptr;
+		rowptr->list_tail->next = cellptr;
+		cellptr->prev = rowptr->list_tail;
+		rowptr->list_tail = cellptr;
 
 	}
 
@@ -806,7 +806,7 @@ int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell,
 
 		// new cell becomes head and pointer cell becomes tail
 		row->list_head = new_cell;
-		row->cell_list_tail = ptr_cell;
+		row->list_tail = ptr_cell;
 	
 	} else if ( ptr_cell == row->list_head ){
 		// new cell becomes new head
@@ -957,24 +957,24 @@ void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr){
 
 	if ( next_cell == NULL && prev_cell == NULL ){
 		// this is the one and only item in the list, so both head and tail
-		if ( cellptr != row->list_head && cellptr != row->cell_list_tail ) {
+		if ( cellptr != row->list_head && cellptr != row->list_tail ) {
 			printf("Invalid cell pointer!\n");
 			exit(1);
 		}
 
 		// to unmap just set the head and tail to NULL
-		row->list_head = row->cell_list_tail = NULL;
+		row->list_head = row->list_tail = NULL;
 	
 	} else if ( next_cell == NULL ){
 		// there is prev but no next, must be tail
-		if ( cellptr != row->cell_list_tail ) {
+		if ( cellptr != row->list_tail ) {
 			printf("Invalid cell pointer!\n");
 			exit(1);
 		}
 
 		// in this case just cut it off from the list by setting tail to prev
-		row->cell_list_tail = prev_cell;
-		row->cell_list_tail->next = NULL;
+		row->list_tail = prev_cell;
+		row->list_tail->next = NULL;
 	
 	} else if ( prev_cell == NULL ) {
 		// there is next cell but no prev, must be head
@@ -1136,7 +1136,7 @@ int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell){
 		printf("Cell is not a child of the specified row!!\n");
 		exit(1);
 	}
-	return  (cur_cell != NULL) && ((cur_cell->next != NULL) || (cur_cell->next == NULL && cur_cell==row->cell_list_tail));
+	return  (cur_cell != NULL) && ((cur_cell->next != NULL) || (cur_cell->next == NULL && cur_cell==row->list_tail));
 }
 
 int has_next_row(struct csv_table * table, struct csv_row * cur_row){

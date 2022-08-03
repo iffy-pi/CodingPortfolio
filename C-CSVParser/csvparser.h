@@ -24,7 +24,7 @@ struct csv_row {
 	int cell_count;
 	//pointers for head and tail of cell list
 	struct csv_cell * list_head;
-	struct csv_cell * cell_list_tail;
+	struct csv_cell * list_tail;
 
 	// points to its parent table
 	struct csv_table * parent;
