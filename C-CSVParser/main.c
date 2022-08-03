@@ -67,7 +67,7 @@ int main(){
 
 	struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
 
-	insmap_cell_into_csv_row(r3, c5, 2);
+	insmap_cell_into_csv_row(r3, c5, r3->length);
 
 	insmap_row_into_csv_table(t1, r3, 1);
 
