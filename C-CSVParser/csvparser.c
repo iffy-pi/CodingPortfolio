@@ -108,8 +108,8 @@ struct csv_row * new_csv_row(){
 struct csv_table * new_csv_table(){
 	struct csv_table * tableptr = (struct csv_table *) malloc(sizeof(struct csv_table));
 	tableptr->row_count = 0;
-	tableptr->row_list_head  = NULL;
-	tableptr->row_list_tail = NULL;
+	tableptr->list_head  = NULL;
+	tableptr->list_tail = NULL;
 
 	return tableptr;
 }
@@ -176,7 +176,7 @@ void free_csv_row(struct csv_row * rowptr){
 void free_csv_table(struct csv_table * tableptr){
 	if ( tableptr == NULL ) return;
 
-	struct csv_row * cur_row = tableptr->row_list_head;
+	struct csv_row * cur_row = tableptr->list_head;
 
 	while ( cur_row != NULL && cur_row->next != NULL ){
 		// while there is a next cell
@@ -197,13 +197,13 @@ void free_csv_table(struct csv_table * tableptr){
 
 	// will break when we are at tail
 	// now just have to free it
-	if (tableptr->row_list_tail != NULL ) {
+	if (tableptr->list_tail != NULL ) {
 		if (VERBOSE){
 			printf("Freeing: ");
-			print_csv_row(tableptr->row_list_tail);
+			print_csv_row(tableptr->list_tail);
 		}
 
-		free_csv_row(tableptr->row_list_tail);
+		free_csv_row(tableptr->list_tail);
 		tableptr->row_count--;
 	}
 
@@ -277,7 +277,7 @@ void print_csv_table(struct csv_table * tableptr){
 
 	printf("[");
 
-	struct csv_row *cur_row = tableptr->row_list_head;
+	struct csv_row *cur_row = tableptr->list_head;
 
 	for(int i=0; i < tableptr->row_count; i++){
 
@@ -327,7 +327,7 @@ void pretty_print_csv_table(struct csv_table *tableptr){
 
 	printf("[\n");
 
-	struct csv_row *cur_row = tableptr->row_list_head;
+	struct csv_row *cur_row = tableptr->list_head;
 
 	for(int i=0; i < tableptr->row_count; i++){
 
@@ -355,7 +355,7 @@ void super_pretty_print_csv_table(struct csv_table *tableptr){
 
 	printf("[\n");
 
-	struct csv_row *cur_row = tableptr->row_list_head;
+	struct csv_row *cur_row = tableptr->list_head;
 	struct csv_cell *cur_cell;
 
 	for(int i=0; i < tableptr->row_count; i++){
@@ -421,7 +421,7 @@ struct csv_table * clone_csv_table(struct csv_table * table){
 	if (table == NULL ) return NULL;
 
 	struct csv_table * new_table = new_csv_table();
-	for( struct csv_row * cur_row=table->row_list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+	for( struct csv_row * cur_row=table->list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
 		add_row_clone_to_csv_table(table, cur_row);
 	}
 
@@ -501,7 +501,7 @@ struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index){
 
 	if( table == NULL || table->row_count == 0 || index >= table->row_count || index < 0 ) return NULL;
 
-	struct csv_row * cur_row = table->row_list_head;
+	struct csv_row * cur_row = table->list_head;
 
 	for(int i=0; i < index; i++) cur_row = cur_row->next;
 
@@ -567,7 +567,7 @@ struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table * table, char *
 	int found_match = FALSE;
 	struct csv_cell * rel_cell;
 
-	for( struct csv_row * cur_row = table->row_list_head; has_next_row(table, cur_row); cur_row = cur_row->next ){
+	for( struct csv_row * cur_row = table->list_head; has_next_row(table, cur_row); cur_row = cur_row->next ){
 		rel_cell = get_cell_for_str_in_csv_row( cur_row, string );
 
 		if ( rel_cell != NULL ){
@@ -607,7 +607,7 @@ int get_row_coord_in_csv_table(struct csv_table * table, struct csv_row * row){
 	if ( row == NULL || table == NULL || table->row_count == 0 ) return -1;
 
 	int indx;
-	struct csv_row * cur_row = table->row_list_head;
+	struct csv_row * cur_row = table->list_head;
 
 	int found_match = FALSE;
 	for( indx=0; indx < table->row_count; indx++){
@@ -625,7 +625,7 @@ int get_cell_coord_in_csv_table(struct csv_table * table, struct csv_cell * cell
 	if ( cell == NULL || table == NULL || table->row_count == 0 ) return -1;
 
 	int cur_row_indx, cur_column_indx;
-	struct csv_row * cur_row = table->row_list_head;
+	struct csv_row * cur_row = table->list_head;
 	int found_match = FALSE;
 
 	for( cur_row_indx=0; cur_row_indx < table->row_count; cur_row_indx++){
@@ -681,7 +681,7 @@ int is_row_mapped_to_csv_table(struct csv_table * table, struct csv_row * rowptr
 
 	int found_match = FALSE;
 
-	for(struct csv_row * cur_row=table->row_list_head; has_next_row(table, cur_row) && !found_match; cur_row=cur_row->next){
+	for(struct csv_row * cur_row=table->list_head; has_next_row(table, cur_row) && !found_match; cur_row=cur_row->next){
 		found_match = ( cur_row == rowptr);
 	}
 
@@ -695,7 +695,7 @@ int is_cell_mapped_to_csv_table(struct csv_table * table, struct csv_cell * cell
 
 	struct csv_row * cur_row;
 
-	for(cur_row=table->row_list_head; has_next_row(table, cur_row) && !found_match; cur_row=cur_row->next){
+	for(cur_row=table->list_head; has_next_row(table, cur_row) && !found_match; cur_row=cur_row->next){
 		found_match = is_cell_mapped_to_csv_row( cur_row, cellptr );
 	}
 
@@ -756,20 +756,20 @@ void map_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr
 	rowptr->parent = tableptr;
 
 	// add the row to the list
-	if ( tableptr->row_list_head == NULL ){
+	if ( tableptr->list_head == NULL ){
 		// this is the first item in the list
-		tableptr->row_list_head = rowptr;
+		tableptr->list_head = rowptr;
 
 		// also assign the tail
-		tableptr->row_list_tail = rowptr;
+		tableptr->list_tail = rowptr;
 
 	} else {
 		// not the first item, append to the end of the list
 		// and then make it the new tail
 
-		tableptr->row_list_tail->next = rowptr;
-		rowptr->prev = tableptr->row_list_tail;
-		tableptr->row_list_tail = rowptr;
+		tableptr->list_tail->next = rowptr;
+		rowptr->prev = tableptr->list_tail;
+		tableptr->list_tail = rowptr;
 
 	}
 
@@ -856,14 +856,14 @@ int map_row_to_coord_in_csv_table(struct csv_table *table, struct csv_row *new_r
 		new_row->prev = NULL;
 
 		// new row becomes head and pointer row becomes tail
-		table->row_list_head = new_row;
-		table->row_list_tail = ptr_row;
+		table->list_head = new_row;
+		table->list_tail = ptr_row;
 	
-	} else if ( ptr_row == table->row_list_head ){
+	} else if ( ptr_row == table->list_head ){
 		// new row becomes new head
 		ptr_row->prev = new_row;
 		new_row->next = ptr_row;
-		table->row_list_head = new_row;
+		table->list_head = new_row;
 	
 	} else {
 		ptr_prev->next = new_row;
@@ -1012,35 +1012,35 @@ void unmap_row_in_csv_table(struct csv_table * table, struct csv_row *  rowptr){
 
 	if ( next_row == NULL && prev_row == NULL ){
 		// this is the one and only item in the list, so both head and tail
-		if ( rowptr != table->row_list_head && rowptr != table->row_list_tail ) {
+		if ( rowptr != table->list_head && rowptr != table->list_tail ) {
 			printf("Invalid row pointer!\n");
 			exit(1);
 		}
 
 		// to unmap just set the head and tail to NULL
-		table->row_list_head = table->row_list_tail = NULL;
+		table->list_head = table->list_tail = NULL;
 	
 	} else if ( next_row == NULL ){
 		// there is prev but no next, must be tail
-		if ( rowptr != table->row_list_tail ) {
+		if ( rowptr != table->list_tail ) {
 			printf("Invalid row pointer!\n");
 			exit(1);
 		}
 
 		// in this case just cut it off from the list by setting tail to prev
-		table->row_list_tail = prev_row;
-		table->row_list_tail->next = NULL;
+		table->list_tail = prev_row;
+		table->list_tail->next = NULL;
 	
 	} else if ( prev_row == NULL ) {
 		// there is next cell but no prev, must be head
-		if ( rowptr != table->row_list_head ) {
+		if ( rowptr != table->list_head ) {
 			printf("Invalid row pointer!\n");
 			exit(1);
 		}
 
 		// in this case we move the head up one
-		table->row_list_head = next_row;
-		table->row_list_head->prev = NULL;
+		table->list_head = next_row;
+		table->list_head->prev = NULL;
 	
 	} else {
 		// both prev and next are not null, so we just skip it over
@@ -1148,7 +1148,7 @@ int has_next_row(struct csv_table * table, struct csv_row * cur_row){
 		printf("Row is not a child of the specified table!!\n");
 		exit(1);
 	}
-	return  (cur_row != NULL) && ((cur_row->next != NULL) || (cur_row->next == NULL && cur_row==table->row_list_tail));
+	return  (cur_row != NULL) && ((cur_row->next != NULL) || (cur_row->next == NULL && cur_row==table->list_tail));
 }
 
 

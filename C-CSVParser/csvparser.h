@@ -36,8 +36,8 @@ struct csv_row {
 struct csv_table {
 	int row_count;
 	// pointers for head and tail of row list
-	struct csv_row * row_list_head;
-	struct csv_row * row_list_tail;
+	struct csv_row * list_head;
+	struct csv_row * list_tail;
 };
 
 int mallocstrcpy(char **dest, char * src, int len);
@@ -158,7 +158,7 @@ int delete_row_from_csv_table(struct csv_table * table, int index);
 int delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
 
 /* used as for loop conditional when iterating through list of rows */
-/* for( cur_row=table->row_list_head; has_next_row(table, cur_row); cur_row =cur_row->next ); */ 
+/* for( cur_row=table->list_head; has_next_row(table, cur_row); cur_row =cur_row->next ); */ 
 int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell);
 int has_next_row(struct csv_table * table, struct csv_row * cur_row);
 
