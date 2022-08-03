@@ -14,17 +14,20 @@
 
 struct csv_cell {
 	char * str;
-	struct csv_row * parent; // points to its parent row
+	// points to its parent row
+	struct csv_row * parent;
 	struct csv_cell * next;
 	struct csv_cell * prev;
 };
 
 struct csv_row {
 	int cell_count;
-	struct csv_cell * cell_list_head;
+	//pointers for head and tail of cell list
+	struct csv_cell * list_head;
 	struct csv_cell * cell_list_tail;
 
-	struct csv_table * parent; // points to its parent table
+	// points to its parent table
+	struct csv_table * parent;
 	struct csv_row * next;
 	struct csv_row * prev;
 
@@ -32,6 +35,7 @@ struct csv_row {
 
 struct csv_table {
 	int row_count;
+	// pointers for head and tail of row list
 	struct csv_row * row_list_head;
 	struct csv_row * row_list_tail;
 };
