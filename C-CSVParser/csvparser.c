@@ -83,7 +83,7 @@ char * malloc_strip_quotes_and_spaces(char  * string, int len, char quot_char, i
 struct csv_cell * new_csv_cell(){
 	struct csv_cell * cellptr = (struct csv_cell *) malloc(sizeof(struct csv_cell));
 	cellptr->str = NULL;
-	cellptr->parent_row = NULL;
+	cellptr->parent = NULL;
 	cellptr->prev = NULL;
 	cellptr->next = NULL;
 	return cellptr;
@@ -726,7 +726,7 @@ int is_string_in_csv_table(struct csv_table * table, char * string){
 
 void map_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
 	// populate parent in the cell
-	cellptr->parent_row = rowptr;
+	cellptr->parent = rowptr;
 
 	// add the element to the list
 	if ( rowptr->cell_list_head == NULL ){
@@ -821,7 +821,7 @@ int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell,
 		new_cell->next = ptr_cell;
 	}
 
-	new_cell->parent_row = row;
+	new_cell->parent = row;
 	row->cell_count++;
 
 	return 0;
@@ -994,7 +994,7 @@ void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr){
 	}
 
 	// remove any pointers
-	cellptr->parent_row = NULL;
+	cellptr->parent = NULL;
 	cellptr->next = NULL;
 	cellptr->prev = NULL;
 
@@ -1058,7 +1058,7 @@ void unmap_row_in_csv_table(struct csv_table * table, struct csv_row *  rowptr){
 }
 
 void unmap_cell_in_csv_table(struct csv_table * table, struct csv_cell * cellptr){
-	struct csv_row * rel_row = cellptr->parent_row;
+	struct csv_row * rel_row = cellptr->parent;
 
 	// makes sure the cell is actually in the table
 	if ( rel_row == NULL || rel_row->parent_table != table ) return;
@@ -1132,7 +1132,7 @@ int delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colind
 }
 
 int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell){
-	if ( cur_cell != NULL && cur_cell->parent_row != row ) {
+	if ( cur_cell != NULL && cur_cell->parent != row ) {
 		printf("Cell is not a child of the specified row!!\n");
 		exit(1);
 	}
