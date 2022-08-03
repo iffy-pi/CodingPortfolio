@@ -410,7 +410,7 @@ struct csv_row * clone_csv_row(struct csv_row * row){
 
 	// copy each cell for the row
 	for( struct csv_cell * cur_cell = row->cell_list_head; has_next_cell(row, cur_cell); cur_cell=cur_cell->next){
-		add_str_to_csv_row( new_row, cur_cell->str, strlen(cur_cell->str));
+		add_str_to_csv_row(new_row, cur_cell->str);
 	}
 
 	return new_row;
@@ -925,14 +925,26 @@ int add_cell_clone_at_coord_to_csv_table(struct csv_table *tableptr, struct csv_
 	return map_cell_to_coord_in_csv_table(tableptr, new_cell, rowindx, colindx);
 }
 
-void add_str_to_csv_row(struct csv_row * rowptr, char * word, int wordlen){
-	// create a new element structure
-	struct csv_cell * cellptr = new_csv_cell();
+int add_char_array_to_csv_row(struct csv_row * rowptr, char arr[], int arrlen){
+	if ( arr[arrlen-1] != '\0' ){
+		printf("Char array does not end with NULL character!\n");
+		return -1;	
+	}
 
-	// use mallocstrcpy to copy the word
-	mallocstrcpy( &(cellptr->str), word, wordlen);
+	// create a new element structure
+	struct csv_cell *cellptr = new_csv_cell();
+
+	// use mallocstrcpy to copy the string
+	// -1 because malloc is for string words, automatically adds null terminator at the end
+	mallocstrcpy( &(cellptr->str), arr, arrlen-1);
 
 	map_cell_into_csv_row(rowptr, cellptr);
+	
+	return 0;
+}
+
+int add_str_to_csv_row(struct csv_row *rowptr, char * string){
+	return add_char_array_to_csv_row(rowptr, string, strlen(string)+1);
 }
 
 void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr){

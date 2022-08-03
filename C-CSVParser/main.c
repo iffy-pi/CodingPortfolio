@@ -63,7 +63,7 @@ int main(){
 	struct csv_row *r3 = new_csv_row();
 	add_cell_clone_to_csv_row(r3, c1);
 	add_cell_clone_to_csv_row(r3, c2);
-	add_str_to_csv_row(r3, "John", 4);
+	add_str_to_csv_row(r3, "John");
 
 	struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
 
@@ -78,6 +78,9 @@ int main(){
 	printf("Result: %d\n", result);
 
 	pretty_print_csv_table(t1);
+
+	char  * stringg = "Pie";
+
 
 	return 0;
 }

@@ -133,7 +133,8 @@ int add_row_clone_at_coord_to_csv_table(struct csv_table * tableptr, struct csv_
 int add_cell_clone_at_coord_to_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx);
 
 /* Create new cell with word and add it to row, uses deep copy for copying word */
-void add_str_to_csv_row(struct csv_row * rowptr, char * word, int wordlen);
+int add_char_array_to_csv_row(struct csv_row * rowptr, char arr[], int arrlen);
+int add_str_to_csv_row(struct csv_row *rowptr, char * string);
 
 /* Unmap the specified cell/row ptr from its parent row/table */
 void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr);
