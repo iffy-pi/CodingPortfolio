@@ -34,7 +34,7 @@ struct csv_row {
 };
 
 struct csv_table {
-	int row_count;
+	int length;
 	// pointers for head and tail of row list
 	struct csv_row * list_head;
 	struct csv_row * list_tail;
