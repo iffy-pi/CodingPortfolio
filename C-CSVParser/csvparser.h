@@ -36,66 +36,66 @@ struct csv_table {
 	struct csv_row * row_list_tail;
 };
 
-int mallocstrcpy(char ** dest, char * src, int len);
-char * malloc_strip_quotes_and_spaces(char  * string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string);
+int mallocstrcpy(char **dest, char * src, int len);
+char * malloc_strip_quotes_and_spaces(char  *string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string);
 
 /* Allocate csv structures on the heap, anything allocated should be deallocated with free functions */
 struct csv_cell * new_csv_cell();
-struct csv_cell * new_csv_cell_from_str(char * string);
+struct csv_cell * new_csv_cell_from_str(char *string);
 struct csv_row * new_csv_row();
 struct csv_table * new_csv_table();
-void free_csv_cell(struct csv_cell * cellptr);
-void free_csv_row(struct csv_row * rowptr);
-void free_csv_table(struct csv_table * tableptr);
+void free_csv_cell(struct csv_cell *cellptr);
+void free_csv_row(struct csv_row *rowptr);
+void free_csv_table(struct csv_table *tableptr);
 
-void populate_csv_cell_str(struct csv_cell * cell, char * string);
+void populate_csv_cell_str(struct csv_cell *cell, char *string);
 
 /* Print the contents of a CSV structure */
-void print_csv_cell(struct csv_cell * cellptr );
-void print_csv_row(struct csv_row * rowptr);
-void print_csv_table(struct csv_table * tableptr);
+void print_csv_cell(struct csv_cell *cellptr );
+void print_csv_row(struct csv_row *rowptr);
+void print_csv_table(struct csv_table *tableptr);
 
 /* Prints cells/rows of row/table in more organized format*/
-void pretty_print_csv_row(struct csv_row* rowptr);
-void pretty_print_csv_table(struct csv_table * tableptr);
+void pretty_print_csv_row(struct csv_row *rowptr);
+void pretty_print_csv_table(struct csv_table *tableptr);
 void super_pretty_print_csv_table(struct csv_table *tableptr);
 
 
 /* Performs a deep copy of the specified parameters and returns a pointer to the new object */
-struct csv_cell * clone_csv_cell(struct csv_cell * cell);
-struct csv_row * clone_csv_row(struct csv_row * row);
-struct csv_table * clone_csv_table(struct csv_table * table);
+struct csv_cell * clone_csv_cell(struct csv_cell *cell);
+struct csv_row * clone_csv_row(struct csv_row *row);
+struct csv_table * clone_csv_table(struct csv_table *table);
 
 /* Compares the values of the cells/rows and returns TRUE if they are the same */ 
-int csv_cell_equals(struct csv_cell * cell1, struct csv_cell * cell2);
-int csv_row_equals(struct csv_row * row1, struct csv_row * row2);
-int csv_table_equals(struct csv_table * table1, struct csv_table * table2);
+int csv_cell_equals(struct csv_cell *cell1, struct csv_cell *cell2);
+int csv_row_equals(struct csv_row *row1, struct csv_row *row2);
+int csv_table_equals(struct csv_table *table1, struct csv_table *table2);
 
 /* Get pointer to cell or row at the specified index */
-struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row * row, int index);
-struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index);
-struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table * table, int rowindx, int colindx);
+struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_ptr_in_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table *table, int rowindx, int colindx);
 
 /* Clone cell/row contents at specified index and return pointer to allocated memory */
-struct csv_cell * get_cell_clone_in_csv_row(struct csv_row * row, int index);
-struct csv_row * get_row_clone_in_csv_table(struct csv_table * table, int index);
-struct csv_cell * get_cell_clone_in_csv_table(struct csv_table * table, int rowindx, int colindx);
+struct csv_cell * get_cell_clone_in_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_clone_in_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_clone_in_csv_table(struct csv_table *table, int rowindx, int colindx);
 
 /* Gets the pointer to the cell in the specified row/table that contains the string, returns NULL if no match is found */
-struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row * row, char * string);
-struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table * table, char * string);
+struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row *row, char *string);
+struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table *table, char *string);
 
 /* Gets the index of the specified row/cell in the specified row/table */
 /* Done by comparing the values of the cell/row and returning index where values match */
 /* Returns -1 if no match */
-int get_cell_coord_in_csv_row(struct csv_row * row, struct csv_cell * cell);
-int get_row_coord_in_csv_table(struct csv_table * table, struct csv_row * row);
+int get_cell_coord_in_csv_row(struct csv_row *row, struct csv_cell *cell);
+int get_row_coord_in_csv_table(struct csv_table *table, struct csv_row *row);
 /* takes pointers to row and column index coordinates, return value is -1 if no match */
-int get_cell_coord_in_csv_table(struct csv_table * table, struct csv_cell * cell, int * rowindx, int * colindx);
+int get_cell_coord_in_csv_table(struct csv_table *table, struct csv_cell *cell, int *rowindx, int *colindx);
 
 /* Gets the coordinates of the cell that contains the specified string */
-int get_str_coord_in_csv_row(struct csv_row * row, char * string);
-int get_str_coord_in_csv_table(struct csv_table * table, char * string, int * rowindx, int * colindx);
+int get_str_coord_in_csv_row(struct csv_row *row, char *string);
+int get_str_coord_in_csv_table(struct csv_table *table, char *string, int *rowindx, int *colindx);
 
 /* Checks if the cell/row ptr is in the specified table/row list, returns TRUE if is */
 // just a pointer comparison
@@ -113,8 +113,14 @@ int is_string_in_csv_row(struct csv_row * row, char * string);
 int is_string_in_csv_table(struct csv_table * table, char * string);
 
 /* Add csv cell/row to csv row/table list by adding pointer to list, uses shallow copy*/
-void map_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr);
-void map_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr);
+void map_cell_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
+void map_row_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
+
+/* Maps the structure into the list at the given index, i.e. mapped structure will have that index */
+/* Everything after is pushed one up */
+/* Returns 0 if successful map, non zero for errors */
+int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *cell, int index);
+int map_row_to_coord_in_csv_table(struct csv_table *table, struct csv_row *row, int index);
 
 /* Add csv cell/row to csv row/table list, uses deep copy (allocates new memory for new rows/cells) */
 void add_cell_clone_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr);

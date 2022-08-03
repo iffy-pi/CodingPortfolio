@@ -60,15 +60,18 @@ int main(){
 	map_row_into_csv_table(t1, r1);
 	map_row_into_csv_table(t1, r2);
 
-	print_csv_row(r1);
-	printf("\n\n");
-	pretty_print_csv_row(r1);
-	printf("\n\n");
-	print_csv_table(t1);
-	printf("\n\n");
+	struct csv_row *r3 = new_csv_row();
+	add_cell_clone_to_csv_row(r3, c1);
+	add_cell_clone_to_csv_row(r3, c2);
+	add_str_to_csv_row(r3, "John", 4);
+
+	struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
+
+	map_cell_to_coord_in_csv_row(r3, c5, 2);
+
+	map_row_to_coord_in_csv_table(t1, r3, 1);
+
 	pretty_print_csv_table(t1);
-	printf("\n\n");
-	super_pretty_print_csv_table(t1);
 
 	return 0;
 }

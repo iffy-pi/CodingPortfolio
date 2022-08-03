@@ -644,6 +644,8 @@ int get_cell_coord_in_csv_table(struct csv_table * table, struct csv_cell * cell
 	// populate the pointers
 	*rowindx = cur_row_indx;
 	*colindx = cur_column_indx;
+
+	return 0;
 }
 
 int get_str_coord_in_csv_row(struct csv_row * row, char * string){
@@ -773,6 +775,108 @@ void map_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr
 
 	// incremenet elementcount
 	tableptr->row_count++;
+}
+
+int map_cell_to_coord_in_csv_row(struct csv_row *row, struct csv_cell *new_cell, int index){
+	if ( index < 0 ) return -2;
+
+	// first we get the cell at that specific index
+	struct csv_cell *ptr_cell = get_cell_ptr_in_csv_row(row, index);
+
+	if ( ptr_cell == NULL ){
+		if ( row->cell_count == index){
+			// just appending to the end no problem
+			map_cell_into_csv_row( row, new_cell);
+			return 0;
+
+		} else return -1;
+	}
+
+	// ptr_cell is where our new cell will be
+	struct csv_cell *ptr_prev = ptr_cell->prev;
+	struct csv_cell *ptr_next = ptr_cell->next;
+
+	if ( row->cell_count == 1){
+		// there is only one item, ptr cell is both head and tail
+		// current cell pushes ptr cell one up therefore
+
+		ptr_cell->prev = new_cell;
+		new_cell->next = ptr_cell;
+		new_cell->prev = NULL;
+
+		// new cell becomes head and pointer cell becomes tail
+		row->cell_list_head = new_cell;
+		row->cell_list_tail = ptr_cell;
+	
+	} else if ( ptr_cell == row->cell_list_head ){
+		// new cell becomes new head
+		ptr_cell->prev = new_cell;
+		new_cell->next = ptr_cell;
+		row->cell_list_head = new_cell;
+	
+	} else {
+		ptr_prev->next = new_cell;
+		ptr_cell->prev = new_cell;
+		new_cell->prev = ptr_prev;
+		new_cell->next = ptr_cell;
+	}
+
+	new_cell->parent_row = row;
+	row->cell_count++;
+
+	return 0;
+
+}
+
+int map_row_to_coord_in_csv_table(struct csv_table *table, struct csv_row *new_row, int index){
+	if ( index < 0 ) return -2;
+
+	// first we get the cell at that specific index
+	struct csv_row *ptr_row = get_row_ptr_in_csv_table(table, index);
+
+	if ( ptr_row == NULL ){
+		if ( table->row_count == index){
+			// just appending to the end no problem
+			map_row_into_csv_table( table, new_row);
+			return 0;
+
+		} else return -1;
+	}
+
+	// ptr_row is where our new row will be
+	struct csv_row *ptr_prev = ptr_row->prev;
+	struct csv_row *ptr_next = ptr_row->next;
+
+	if ( table->row_count == 1){
+		// there is only one item, ptr row is both head and tail
+		// current row pushes ptr row one up therefore
+
+		ptr_row->prev = new_row;
+		new_row->next = ptr_row;
+		new_row->prev = NULL;
+
+		// new row becomes head and pointer row becomes tail
+		table->row_list_head = new_row;
+		table->row_list_tail = ptr_row;
+	
+	} else if ( ptr_row == table->row_list_head ){
+		// new row becomes new head
+		ptr_row->prev = new_row;
+		new_row->next = ptr_row;
+		table->row_list_head = new_row;
+	
+	} else {
+		ptr_prev->next = new_row;
+		ptr_row->prev = new_row;
+		new_row->prev = ptr_prev;
+		new_row->next = ptr_row;
+	}
+
+	new_row->parent_table = table;
+	table->row_count++;
+
+	return 0;
+
 }
 
 void add_cell_clone_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
