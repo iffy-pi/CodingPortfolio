@@ -71,6 +71,8 @@ int main(){
 
 	map_row_to_coord_in_csv_table(t1, r3, 1);
 
+	struct csv_cell *c6 = new_csv_cell_from_str("Cell6");
+
 	pretty_print_csv_table(t1);
 
 	return 0;
