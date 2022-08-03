@@ -72,10 +72,11 @@ def run_test_set():
 
 	test_results = []
 	for file in os.listdir( 'inputs' ):
-		print('Running Test {}...'.format(test_count))
-		test_name = "test_{}_{}".format(test_count, os.path.splitext(file)[0])
-
 		input_csv_file = os.path.join( 'inputs', file)
+
+		print('Running Test {} ({})...'.format(test_count, input_csv_file))
+
+		test_name = "test_{}_{}".format(test_count, os.path.splitext(file)[0])
 
 		run_test( input_csv_file, test_name )
 
@@ -110,42 +111,77 @@ def run_test_set():
 
 	return test_results
 
-def print_test_results(test_results, only_failures=False):
-	
+def print_file_to_console(faddr):
+	with open(faddr, 'r') as f:
+		print(f.read())
+
+def print_test_results(test_results, only_failures=False, print_file_contents=False):
+		
+	if (only_failures):
+		print('Printing only failed tests...')
+		print('==========================================================================>')
+
 	for test in test_results:
 		if ( not only_failures ) or ( only_failures and (test['missing_outputs'] or test['different'])):
 			print('Test: {}'.format(test['test']))
-			print('Input File: {}'.format(test['input_file']))
 			print('Status: {}'.format( 'FAIL' if (test['missing_outputs'] or test['different']) else 'PASS' ))
-			print('')
-			print('C Output: {}'.format(test['c_output_file']))
-			print('PY Output: {}'.format(test['py_output_file']))
-			print('')
+
+			reason_str = None
 			if test['missing_outputs']:
-				if not os.path.exists(test['c_output_file']):
-					print('C Output does not exist!')
 				if not os.path.exists(test['py_output_file']):
-					print('PY Output does not exist!')
+					reason_str = 'PY Output does not exist!'
 
-			if test['different']:
-				print('Outputs have differening content!')
+				if not os.path.exists(test['c_output_file']):
+					if not reason_str: reason_str = 'C Output does not exist!'
+					else: reason_str += ', C Output does not exist!'
 
-			print('===============================================>')
+			elif test['different']:
+				reason_str = 'Outputs have differening content!' 
+
+			print('Reason For Failure: {}'.format(reason_str if reason_str else 'N/A (Test Passed)'))
+			print('')
+
+			print('Input File: {}'.format(test['input_file']))
+			if print_file_contents:
+				print("-----------INPUT--------------")
+				print_file_to_console(test['input_file'])
+				print("-------------------------------")
+				print('')
+
+			print('PY Output: {}'.format(test['py_output_file']))
+			if print_file_contents:
+				print("-----------PY OUTPUT-----------")
+				print_file_to_console(test['py_output_file'])
+				print("-------------------------------")
+				print('')
+
+			print('C Output: {}'.format(test['c_output_file']))
+			if print_file_contents:
+				print("-----------C OUTPUT-----------")
+				print_file_to_console(test['c_output_file'])
+				print("-------------------------------")
+				print('')
+			
+			print('==========================================================================>')
 
 
 def main():
-	# testing the result
-	# run_c_parser( "inputs\\quotes_and_newlines.csv", "test_output.txt" )
 
-	#run_python_parser( "inputs\\my_escaped_quotes.csv", "test_output.txt" )
+	sys.argv = sys.argv[1:]
 
-	# run_test( "..\\addresses.csv", "test_output.txt" )
+	print_all_tests = False
+	print_files = False
+
+	print_all_tests = '--all-tests' in sys.argv
+	print_files = '--print-files' in sys.argv
 
 	test_results = run_test_set()
 
+	print('=====================================================================');
 	print('Results:')
+	print('=====================================================================');
 
-	print_test_results(test_results, only_failures=True)
+	print_test_results(test_results, only_failures=(not print_all_tests), print_file_contents=print_files)
 
 
 if __name__ == "__main__":
