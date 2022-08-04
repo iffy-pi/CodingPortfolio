@@ -42,6 +42,10 @@ Functions are provided to get a row/cell at a specific row and column index (see
 
 The parsed CSV structure is allocated on the heap and therefore must be freed manually. The header files include free functions for each of the CSV structures to make sure all allocated memory is freed (see Free CSV Structures).
 
+# Examples
+- Parsing a CSV string and using it in a function
+- TBD
+
 # In-depth Tutorial
 ## Create CSV Structures
 CSV structures can be created in code using the *new_csv* functions.
@@ -559,7 +563,7 @@ In the worst case where a word is split across two buffers from `fgets`, it will
 ### Sequential Access
 Accessing the beginning and end of the list is `O(1)` since there is the list head and tail pointers.
 
-Get CSV Structure functions are designed to start from the end closest to the specified index, therefore worst-case scenario will mean going through` n/2` elements ⸫ `O(n/2) ≅ O(n)`.
+Get CSV Structure functions are designed to start from the end closest to the specified index, therefore worst-case scenario will mean going through `n/2` elements ⸫ `O(n/2) ≅ O(n)`.
 
 ### Inserting Structures
 Appending to the end of the list is `O(1)` since adjusting list_tail and incrementing length is constant time.
@@ -593,7 +597,7 @@ With this implementation, there will always be a wasted slot for each quote that
 
 The decision was made to maintain the current implementation as the above solution would result in an extra character iteration to be done on every word that needs to be stripped. This would introduce an additional time complexity for every word to be parsed, with the benefits only being to words with several quotes. The additional time complexity for the solution was determined to be of more detriment than the additional space complexity incurred by wasting characters.
 
-Perhaps a future iteration can introduce a flag to be able to control if the string should be doubly sanitized to remove the wasted space.
+A future iteration can introduce a flag to be able to control if the string should be doubly sanitized to remove the wasted space.
 
 # Testing and Verification
 ## Testing Process and How to Run.
