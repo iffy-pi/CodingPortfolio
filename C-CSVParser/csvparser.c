@@ -1117,31 +1117,22 @@ struct csv_cell * pop_cell_from_csv_table(struct csv_table * table, int rowindx,
 	return rel_cell;
 }
 
-int delete_cell_from_csv_row(struct csv_row * row, int index){
+void delete_cell_from_csv_row(struct csv_row * row, int index){
 	struct csv_cell * rel_cell = pop_cell_from_csv_row(row, index);
 
-	if ( rel_cell == NULL ) return 1;
-
-	free_csv_cell(rel_cell);
-	return 0;
+	if ( rel_cell != NULL ) free_csv_cell(rel_cell);
 }
 
-int delete_row_from_csv_table(struct csv_table * table, int index){
+void delete_row_from_csv_table(struct csv_table * table, int index){
 	struct csv_row * rel_row = pop_row_from_csv_table(table, index);
 
-	if ( rel_row == NULL ) return 1;
-
-	free_csv_row(rel_row);
-	return 0;
+	if ( rel_row != NULL ) free_csv_row(rel_row);
 }
 
-int delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx){
+void delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx){
 	struct csv_cell * rel_cell = pop_cell_from_csv_table(table, rowindx, colindx);
 
-	if ( rel_cell == NULL ) return 1;
-
-	free_csv_cell(rel_cell);
-	return 0;
+	if ( rel_cell != NULL ) free_csv_cell(rel_cell);
 }
 
 int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell){

@@ -107,7 +107,7 @@ int is_cell_mapped_to_csv_row(struct csv_row * row, struct csv_cell * cellptr);
 int is_row_mapped_to_csv_table(struct csv_table * table, struct csv_row * rowptr);
 int is_cell_mapped_to_csv_table(struct csv_table * table, struct csv_cell * cellptr);
 
-/* Checks if the value of the specified cell/row is in the specified table/row list, returns TRUE if is */
+/* Checks if the contents of the specified cell/row is in the specified table/row list, returns TRUE if is */
 int is_cell_in_csv_row(struct csv_row * row, struct csv_cell * cell);
 int is_row_in_csv_table(struct csv_table * table, struct csv_row * row);
 int is_cell_in_csv_table(struct csv_table * table, struct csv_cell * cell);
@@ -157,10 +157,9 @@ struct csv_row * pop_row_from_csv_table(struct csv_table * table, int index);
 struct csv_cell * pop_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
 
 /* removes and frees the specified cell/row at the specified coordinates in the specified row/table */
-/* returns 0 if things were deleted */
-int delete_cell_from_csv_row(struct csv_row * row, int index);
-int delete_row_from_csv_table(struct csv_table * table, int index);
-int delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
+void delete_cell_from_csv_row(struct csv_row * row, int index);
+void delete_row_from_csv_table(struct csv_table * table, int index);
+void delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
 
 /* used as for loop conditional when iterating through list of rows */
 /* for( cur_row=table->list_head; has_next_row(table, cur_row); cur_row =cur_row->next ); */ 
