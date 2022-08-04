@@ -32,4 +32,16 @@ The functions take the string to parse (string) or the address of the file to re
 | `strip_spaces`        | Boolean flag. If true (1), parsed CSV values will be stripped of leading and trailing spaces. |
 | `discard_empty_cells` | Boolean flag. If true (1), any value that is an empty string (`""`) will not be added to the parsed structure. |
 
+*Note: If the delimiter is a space character* (`' '`), *strip_spaces and discard_empty_cells will be overridden to 0 (false) and 1 (true) respectively.*
+
+The return value is a pointer to the structure used to store the parsed CSV values, a `struct csv_table`.
+
+`struct csv_table` is the highest level of the parsed CSV structure. It is made up of a doubly linked list of `struct csv_row`, which are in turn made up of a doubly linked list of `struct csv_cell`. The `struct csv_cell` contains the appropriate parsed string value in its `str` field.
+
 ![Structure of CSV Diagram](/C-CSVParser/doc/csv_structure_diagram.png?raw=true "CSV Structure Diagram")
+
+The structure is designed to mirror the table layout in the unparsed CSV. The length field is the number of CSV rows or CSV Cells in the list of a CSV table or CSV row respectively.
+
+Functions are provided to get a row/cell at a specific row and column index (see Get CSV Structures and Coordinates).
+
+The parsed CSV structure is allocated on the heap and therefore must be freed manually. The header files include free functions for each of the CSV structures to make sure all allocated memory is freed (see Free CSV Structures).
