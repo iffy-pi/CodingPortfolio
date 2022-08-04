@@ -84,5 +84,199 @@ struct csv_table *t1 = new_csv_table();
 ```
 
 ## Clone CSV Structures
+The clone functions are provided to clone the contents of the passed in pointer to the CSV structure.
+```c
+struct csv_cell * clone_csv_cell(struct csv_cell * cell);
+struct csv_row * clone_csv_row(struct csv_row * row);
+struct csv_table * clone_csv_table(struct csv_table * table);
+```
+
+The clone function allocates a new CSV structure on the heap and then copies the contents of the source CSV structure. Cloned rows and tables will have their child cells cloned as well.
+
+## Free CSV Structures
+CSV Structures are allocated on the heap and therefore must be freed appropriately.
+
+### Free CSV Cells
+An allocated CSV cell can be de-allocated using `free_csv_cell`.
+```c
+free_csv_cell(c1);
+```
+
+### Free CSV Rows
+An allocated CSV row can be de-allocated using `free_csv_row`.
+```c
+free_csv_row(r1);
+```
+
+When a CSV row is freed, all cells in its cell list are also freed (using `free_csv_cell`). Therefore, if you are working with a cell mapped to a row, be sure to clone the cell contents before freeing the row.
+
+### Free CSV Tables
+An allocated CSV table can be de-allocated using `free_csv_table`.
+```c
+free_csv_table(t1);
+```
+
+When a CSV table is freed, all rows in its row list are also freed (using `free_csv_row`).
+
+## Print CSV Cell Structures
+The contents of csv structures can be printed using the print functions.
+
+### Print CSV Cells
+CSV cells can be printed using `print_csv_cell`.
+```c
+print_csv_cell(c1);
+```
+
+The function prints the string contained in the cell's str field surrounded by quotes.
+```
+"Cell1"
+```
+
+### Print CSV Rows
+CSV rows can be printed using `print_csv_row`.
+```c
+print_csv_row(r1);
+```
+
+The function prints all the cells in the row's cell list in the order that they appear. The cell list is surrounded by square brackets and a new line character is also printed.
+```
+["Cell1", "Cell2"]
+```
+
+There is also `pretty_print_csv_row`, which prints CSV cell contents with tabulation and newlines.
+```
+[
+        "Cell1",
+        "Cell2"
+]
+```
+
+### Print CSV Tables
+A basic print can be done using the `print_csv_table` function.
+```c
+print_csv_table(t1);
+```
+
+This prints the set of CSV rows with their cell contents on one line. A newline character is also printed.
+```
+[["Cell1", "Cell2"], ["Cell3", "Cell4"]]
+```
+
+The function `pretty_print_csv_table` organizes the rows as they are printed. Each row is printed on one line with tabulation.
+```
+[
+        ["Cell1", "Cell2"],
+        ["Cell3", "Cell4"]
+]
+```
+
+There is also `super_pretty_print_csv_table`, which performs a pretty print to the CSV cells in each CSV row in addition to the row organization from `pretty_print_csv_table`.
+```
+[
+        [
+                "Cell1",
+                "Cell2"
+        ],
+
+        [
+                "Cell3",
+                "Cell4"
+        ]
+]
+```
 
 
+## Get CSV Structures and Coordinates
+### Get CSV Structure at Specified Coordinate
+#### Get Structure Pointers
+The following functions are provided to get a pointer to the CSV structure at a specified coordinate:
+```c
+struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_ptr_in_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table *table, int rowindx, int colindx);
+```
+The functions take the parent row/table and the index for the cell/row.
+
+Use `get_cell_ptr_in_csv_row` to get the pointer to CSV cells at a specific index.
+```c
+// r1 = ["Cell1", "Cell2"]
+
+// Getting "Cell1"
+struct csv_cell *cell0 = get_cell_ptr_in_csv_row(r1, 0);
+
+// Getting "Cell2"
+struct csv_cell *cell1 = get_cell_ptr_in_csv_row(r1, 1);
+```
+
+Use `get_row_ptr_in_csv_table` to get the pointer to the CSV row at the specific index.
+```c
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4"]]
+
+// Getting ["Cell1", "Cell2"]
+struct csv_row *row0 = get_row_ptr_in_csv_table(t1, 0);
+```
+
+To get a specific cell in a CSV table, `get_cell_ptr_in_csv_table` can be used.
+```c
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4"]]
+
+// Getting "Cell1"
+struct csv_cell *cell0 = get_cell_ptr_in_csv_table(t1, 0, 0);
+
+// Getting "Cell3"
+struct csv_cell *cell2 = get_cell_ptr_in_csv_table(t1, 1, 0);
+```
+If the specified index is out of range of the parent CSV structure or the pointer to the parent CSV structure, a NULL pointer is returned.
+
+Note: **The pointer to the CSV structure mapped in the parent structure is returned, meaning any changes made to the pointer's value will affect the parent structure. To get a deep copy, refer to Get Structure Clones.**
+
+#### Get Structure Clones
+The following functions are provided to get the clone of the CSV structure at the specified index.
+```c
+struct csv_cell * get_cell_clone_in_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_clone_in_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_clone_in_csv_table(struct csv_table *table, int rowindx, int colindx);
+```
+
+In this case, the pointer returned points to a clone of the CSV structure at the specified coordinates. This means that it is separate from the parent structure it was taken from.
+
+### Get CSV Cell for a String
+The functions below are provided to get the pointer to the CSV cell in the row/table whose str field is the same string as the string parameter.
+```c
+struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row *row, char * string);
+struct csv_cell * get_cell_for_str_in_csv_table(struct csv_table *table, char * string);
+```
+The pointer to the CSV cell returned will be the first match found in the parent structure.
+
+### Get Coordinates for CSV Structure
+For a passed in CSV structure, the provided functions return the coordinates to the CSV structure in the passed in parent CSV structure which contains the same contents as the reference CSV structure.
+```c
+int get_cell_coord_in_csv_row(struct csv_row *row, struct csv_cell *cell);
+int get_row_coord_in_csv_table(struct csv_table *table, struct csv_row *row);
+```
+For example, consider the CSV row r1 which is` ["Cell1", "Cell2"]`. We can get the index of the cell that contains the string `"Cell1"` using the following.
+```c
+struct csv_cell *search_cell = new_csv_cell_from_str("Cell1");
+int index = get_cell_coord_in_csv_row(r1, search_cell); // index is 0
+```
+Note that the reference CSV structure does not have to be a part of the parent CSV structure (row/table) since the search is performed using structure content comparison.
+
+If there is no match found, -1 is returned.
+
+`get_cell_coord_in_csv_table` is provided to get the coordinates of a CSV cell structure in the parent table with the same contents as the reference CSV structure.
+```c
+int get_cell_coord_in_csv_table(struct csv_table *table, struct csv_cell *cell, int *rowindx, int *colindx);
+```
+
+Since a cell coordinate in a table has both a row and column, the function also takes pointers to store the resulting row and column index.
+
+If a match is found, the function will populate the index pointers and return 0. Otherwise, it will return -1.
+
+### Get Coordinates for a String
+The below functions have the same behaviour as the functions discussed in Get Coordinates for CSV Structure but instead take a string parameter instead of a reference CSV structure.
+```c
+int get_str_coord_in_csv_row(struct csv_row *row, char *string);
+int get_str_coord_in_csv_table(struct csv_table *table, char *string, int *rowindx, int *colindx);
+```
+
+In this case, the returned coordinates are to the first CSV cell that contains the same string as the reference string.
