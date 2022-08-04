@@ -1,52 +1,35 @@
-![Alt text](/C-CSVParser/doc/csv_structure_diagram.png?raw=true "CSV Structure Diagram")
+# C CSV Parser Documentation
+## Overview
+The included files provide functions to parse CSV (or other character separated) files and/or strings into an accessible structure in the C programming language. The underlying parsed structures make use of doubly linked lists and are allocated on the heap of the running program.
 
-Table test
+The reason I wrote this CSV parser for C is its ease of access. While there are several other CSV parsers available, I could not find anyone that was as convenient as calling a function on a string or filename parameter and the parsed CSV structure being returned. Most of the parsers I found were more complicated than what I needed.
 
-| **Use Case**         | **Big-O** | **Reasoning**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parsing CSV          | O(n)      | There are two cases, in both of which the parser results in O(n). (Calculations are based on the behaviour of the base parser function parse\_fileptr\_or\_char\_array\_to\_csv\_table).
+This CSV parser parses the input file or string and returns the parsed structure allocated on the heap.
 
-Case 1: No cell merges need to happen. Case for parsing string or fgets has entire CSV row in its buffer.
+This documentation is intended to provide information on how to use the provided CSV parser.
 
-For a given word of length n, we traverse the buffer n times to find the word delimiter ⸫ O(n).
+The parser testing process and possible limitations are discussed in Testing and Evaluation respectively.
 
-The word is copied from the buffer into the allocated cell:
+[Link text Here](https://link-url-here.org)
 
-O(1) for cell allocation
+**For a PDF version of documentation: see [doc/CSVParserDoc.pdf](/C-CSVParser/doc/CSVParserDoc.pdf)**
 
-O(n) for word copy (copied character by character)
+## Basic Tutorial
+Once the header file and the implementation file are included in your project, CSV files and strings can be parsed using the following functions:
+```c
+struct csv_table * parse_string_to_csv_table(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
 
-For one word: O(n) + O(n) + O(1) = O(2n) + O(1).
+struct csv_table * open_and_parse_file_to_csv_table(char * filename, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
 
-This scales to the other words in the buffer: O(2n) + O(1) ![](file:///C:/Users/omnic/AppData/Local/Temp/msohtmlclip1/01/clip_image002.png) O(n)
+```
 
-Case 2: Cell merges happen (fgets does not have entire CSV row in the buffer).
+The functions take the string to parse (string) or the address of the file to read and parse (filename). The other function parameters control the parser behaviour:
 
-In the worst case where a word is split across two buffers from fgets, it will have to be merged. To perform this:
+| Parameter             | Description |
+| :---                  |    :---     |
+| `delim`               | This is the character used to separate values. For CSVs it is `,` but it can be set to any symbol. |
+| `quot_char`           | Character used for making quotes, e.g. `"` or `'` |
+| `strip_spaces`        | Boolean flag. If true (1), parsed CSV values will be stripped of leading and trailing spaces. |
+| `discard_empty_cells` | Boolean flag. If true (1), any value that is an empty string (`""`) will not be added to the parsed structure. |
 
-O(n) to traverse buffer and find delimiter of first part of the word
-
-O(n) + O(1) to copy the first part of the word into an allocated cell
-
-O(n) to traverse the new buffer and find delimiter and therefore second part of the word
-
-O(n) + O(n) + O(1) to copy the first part of the word and the second part of the word to a new cell that has the combined string
-
-O(1) to delete old cell from the table.
-
-O(n) + O(n) to strip combined string of quotes and spaces
-
-O(n +  n + 1 + n +  n + n + 1 +  1 +  n + n) = O(7n + 1) = O(7n) ![](file:///C:/Users/omnic/AppData/Local/Temp/msohtmlclip1/01/clip_image002.png) O(n) |
-| Sequential Access    | O(n)      | Accessing the beginning and end of the list is O(1) since there is the list head and tail pointers.
-
-Get CSV Structure functions are designed to start from the end closest to the specified index, therefore worst-case scenario will mean going through n/2 elements ⸫ O(n/2) ![](file:///C:/Users/omnic/AppData/Local/Temp/msohtmlclip1/01/clip_image002.png) O(n).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Inserting Structures | O(n)      | Appending to the end of the list is O(1) since adjusting list\_tail and incrementing length is constant time.
-
-The worst case for an insertion:
-
-In a list of n CSV structures, we are inserting the structure at location n-1. This would mean traversing past the first n-1 elements ⸫ O(n-1).
-
-Adjusting the list pointers is O(1).
-
-Worst case: O(n-1) + O(1) ![](file:///C:/Users/omnic/AppData/Local/Temp/msohtmlclip1/01/clip_image002.png) O(n).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Checking for Content | O(n)      | No starting optimization can be made as content to search for can be placed anywhere in the list. Worst case is going through all list elements to find them therefore O(n).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+![Structure of CSV Diagram](/C-CSVParser/doc/csv_structure_diagram.png?raw=true "CSV Structure Diagram")
