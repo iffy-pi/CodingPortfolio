@@ -475,7 +475,7 @@ int csv_table_equals(struct csv_table * table1, struct csv_table * table2){
 
 	struct csv_row *cur_row1, *cur_row2;
 
-	// compare each individual cell, break if there is a difference found
+	// compare each individual row, break if there is a difference found
 	for ( int i=0; i < table1->length && !different; i++ ){
 		cur_row1 = get_row_ptr_in_csv_table( table1, i);
 		cur_row2 = get_row_ptr_in_csv_table( table2, i);

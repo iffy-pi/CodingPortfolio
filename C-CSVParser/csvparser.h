@@ -103,18 +103,18 @@ int get_str_coord_in_csv_table(struct csv_table *table, char *string, int *rowin
 
 /* Checks if the cell/row ptr is in the specified table/row list, returns TRUE if is */
 // just a pointer comparison
-int is_cell_mapped_to_csv_row(struct csv_row * row, struct csv_cell * cellptr);
-int is_row_mapped_to_csv_table(struct csv_table * table, struct csv_row * rowptr);
-int is_cell_mapped_to_csv_table(struct csv_table * table, struct csv_cell * cellptr);
+int is_cell_mapped_to_csv_row(struct csv_row *row, struct csv_cell *cellptr);
+int is_row_mapped_to_csv_table(struct csv_table *table, struct csv_row *rowptr);
+int is_cell_mapped_to_csv_table(struct csv_table *table, struct csv_cell *cellptr);
 
 /* Checks if the contents of the specified cell/row is in the specified table/row list, returns TRUE if is */
-int is_cell_in_csv_row(struct csv_row * row, struct csv_cell * cell);
-int is_row_in_csv_table(struct csv_table * table, struct csv_row * row);
-int is_cell_in_csv_table(struct csv_table * table, struct csv_cell * cell);
+int is_cell_in_csv_row(struct csv_row *row, struct csv_cell *cell);
+int is_row_in_csv_table(struct csv_table *table, struct csv_row *row);
+int is_cell_in_csv_table(struct csv_table *table, struct csv_cell *cell);
 
 /* Checks if specified string is in the csv table, returns TRUE if match is found */
-int is_string_in_csv_row(struct csv_row * row, char * string);
-int is_string_in_csv_table(struct csv_table * table, char * string);
+int is_string_in_csv_row(struct csv_row *row, char *string);
+int is_string_in_csv_table(struct csv_table *table, char *string);
 
 /* Add csv cell/row to csv row/table list by adding pointer to list, uses shallow copy*/
 void map_cell_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
@@ -146,9 +146,9 @@ int insert_str_into_csv_table(struct csv_table *tableptr, char *string, int rowi
 
 
 /* Unmap the specified cell/row ptr from its parent row/table */
-void unmap_cell_in_csv_row(struct csv_row * row, struct csv_cell *  cellptr);
-void unmap_row_in_csv_table(struct csv_table * table, struct csv_row * rowptr);
-void unmap_cell_in_csv_table(struct csv_table * table, struct csv_cell * cellptr);
+void unmap_cell_in_csv_row(struct csv_row *row, struct csv_cell * cellptr);
+void unmap_row_in_csv_table(struct csv_table *table, struct csv_row *rowptr);
+void unmap_cell_in_csv_table(struct csv_table *table, struct csv_cell *cellptr);
 
 /* removes the specified cell/row at the specified coordinates in the specified row/table list and returns a pointer to it */
 /* returns NULL if it could not find a match */
@@ -157,9 +157,9 @@ struct csv_row * pop_row_from_csv_table(struct csv_table * table, int index);
 struct csv_cell * pop_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
 
 /* removes and frees the specified cell/row at the specified coordinates in the specified row/table */
-void delete_cell_from_csv_row(struct csv_row * row, int index);
-void delete_row_from_csv_table(struct csv_table * table, int index);
-void delete_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
+void delete_cell_from_csv_row(struct csv_row *row, int index);
+void delete_row_from_csv_table(struct csv_table *table, int index);
+void delete_cell_from_csv_table(struct csv_table *table, int rowindx, int colindx);
 
 /* used as for loop conditional when iterating through list of rows */
 /* for( cur_row=table->list_head; has_next_row(table, cur_row); cur_row =cur_row->next ); */ 

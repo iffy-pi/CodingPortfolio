@@ -75,11 +75,15 @@ int main(){
 
 	int result = insmap_cell_into_csv_table(t1, c6, 2, 2);
 
-	printf("Result: %d\n", result);
+	// printf("Result: %d\n", result);
 
-	pretty_print_csv_table(t1);
+	// pretty_print_csv_table(t1);
 
-	char  * stringg = "Pie";
+	// char  * stringg = "Pie";
+
+	for( struct csv_cell *cur_cell=r1->list_head; has_next_cell(r1, cur_cell); cur_cell=cur_cell->next ){
+		printf("%s\n", cur_cell->str);
+	}
 
 
 	return 0;
