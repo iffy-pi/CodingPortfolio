@@ -144,7 +144,6 @@ int add_str_to_csv_row(struct csv_row *rowptr, char * string);
 int insert_str_into_csv_row(struct csv_row *rowptr, char *string, int index);
 int insert_str_into_csv_table(struct csv_table *tableptr, char *string, int rowindx, int colindx);
 
-
 /* Unmap the specified cell/row ptr from its parent row/table */
 void unmap_cell_in_csv_row(struct csv_row *row, struct csv_cell * cellptr);
 void unmap_row_in_csv_table(struct csv_table *table, struct csv_row *rowptr);

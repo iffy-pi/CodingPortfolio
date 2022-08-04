@@ -41,49 +41,19 @@ int main(){
 
 	// print_csv_table(table);
 
-	struct csv_cell *c1 = new_csv_cell_from_str("Cell1");
-
-	struct csv_cell *c2 = new_csv_cell_from_str("Cell2");
-
 	struct csv_row *r1 = new_csv_row();
-	map_cell_into_csv_row(r1, c1);
-	map_cell_into_csv_row(r1, c2);
+	add_str_to_csv_row(r1, "a");
+	add_str_to_csv_row(r1, "b");
+	add_str_to_csv_row(r1, "c");
+	add_str_to_csv_row(r1, "d");
+	add_str_to_csv_row(r1, "e");
 
-	struct csv_cell *c3 = new_csv_cell_from_str("Cell3");
-	struct csv_cell *c4 = new_csv_cell_from_str("Cell4");
 
-	struct csv_row *r2 = new_csv_row();
-	map_cell_into_csv_row(r2, c3);
-	map_cell_into_csv_row(r2, c4);
+	print_csv_row(r1);
 
-	struct csv_table* t1 = new_csv_table();
-	map_row_into_csv_table(t1, r1);
-	map_row_into_csv_table(t1, r2);
+	struct csv_cell *c = get_cell_ptr_in_csv_row(r1, 2);
 
-	struct csv_row *r3 = new_csv_row();
-	add_cell_clone_to_csv_row(r3, c1);
-	add_cell_clone_to_csv_row(r3, c2);
-	add_str_to_csv_row(r3, "John");
-
-	struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
-
-	insmap_cell_into_csv_row(r3, c5, r3->length);
-
-	insmap_row_into_csv_table(t1, r3, 1);
-
-	struct csv_cell *c6 = new_csv_cell_from_str("Cell6");
-
-	int result = insmap_cell_into_csv_table(t1, c6, 2, 2);
-
-	// printf("Result: %d\n", result);
-
-	// pretty_print_csv_table(t1);
-
-	// char  * stringg = "Pie";
-
-	for( struct csv_cell *cur_cell=r1->list_head; has_next_cell(r1, cur_cell); cur_cell=cur_cell->next ){
-		printf("%s\n", cur_cell->str);
-	}
+	print_csv_cell(c);
 
 
 	return 0;

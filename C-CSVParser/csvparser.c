@@ -21,7 +21,7 @@ int mallocstrcpy(char ** dest, char * src, int len){
 	return 0;
 }
 
-char * malloc_strip_quotes_and_spaces(char  * string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string){
+char * malloc_strip_quotes_and_spaces(char  *string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string){
 	// strips string of leading and trailing spaces
 	// returns a pointer to the stripped string, allocated using malloc
 	// option to free old string as parameter
@@ -489,9 +489,20 @@ int csv_table_equals(struct csv_table * table1, struct csv_table * table2){
 struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row * row, int index){
 	if( row == NULL || row->length == 0 || index >= row->length || index < 0 ) return NULL;
 
-	struct csv_cell * cur_cell = row->list_head;
+	struct csv_cell * cur_cell;
 
-	for(int i=0; i < index; i++) cur_cell = cur_cell->next;
+	if ( index > (row->length/2)){
+		// it will be shorter from the tail end
+		cur_cell = row->list_tail;
+		for(int i=row->length-1; i > index; i--)
+			cur_cell = cur_cell->prev;
+
+	} else {
+		// go from head
+		cur_cell = row->list_head;
+		for(int i=0; i < index; i++)
+			cur_cell = cur_cell->next;
+	}
 
 	return cur_cell;
 
@@ -501,9 +512,17 @@ struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index){
 
 	if( table == NULL || table->length == 0 || index >= table->length || index < 0 ) return NULL;
 
-	struct csv_row * cur_row = table->list_head;
+	struct csv_row *cur_row;
 
-	for(int i=0; i < index; i++) cur_row = cur_row->next;
+	if ( index > (table->length/2)){
+		cur_row = table->list_tail;
+		for( int i=table->length-1; i > index; i--)
+			cur_row = cur_row->prev;
+	} else{
+		cur_row = table->list_head;
+		for(int i=0; i < index; i++)
+			cur_row = cur_row->next;
+	}
 
 	return cur_row;
 
@@ -1298,7 +1317,7 @@ struct csv_table * parse_fileptr_or_char_array_to_csv_table( FILE * csv_file, ch
 					} else if ( cur_row->length > 0 && !first_word_for_buffer_parsed ){
 						// if this is false that means this is the first word,
 						// we need to combine it with the last word in the cur row
-						last_cell = get_cell_ptr_in_csv_row(cur_row, cur_row->length-1);
+						last_cell = cur_row->list_tail;
 						last_word_len = strlen(last_cell->str);
 
 						if (verbose) printf("Merging: \"%s\" + $cur_word\n", last_cell->str);
