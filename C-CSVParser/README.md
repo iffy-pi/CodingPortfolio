@@ -280,3 +280,287 @@ int get_str_coord_in_csv_table(struct csv_table *table, char *string, int *rowin
 ```
 
 In this case, the returned coordinates are to the first CSV cell that contains the same string as the reference string.
+
+
+## Combine CSV Structures
+The below functions add CSV structures to the list contained in the parent CSV structure.
+
+### Combine Structure Pointers
+The below functions are provided to map a child CSV structure into the list of a parent CSV structure.
+```c
+void map_cell_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
+void map_row_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
+```
+
+When a CSV structure is mapped into a parent CSV structure, the pointer to the child CSV structure is added to the end of the doubly linked list contained in the parent CSV structure. Therefore, any changes made to the child CSV structure will be reflected in the parent.
+```c
+struct csv_cell *c1 = new_csv_cell_from_str("Cell1");
+struct csv_cell *c2 = new_csv_cell_from_str("Cell2");
+struct csv_row *r1 = new_csv_row();
+
+map_cell_into_csv_row(r1, c1); // r1 = ["Cell1"]
+map_cell_into_csv_row(r1, c2); // r1 = ["Cell1", "Cell2"]
+
+populate_csv_cell_str(c2, "Apple"); // c2 = "Apple"
+                                    // r1 = ["Cell1", "Apple"]
+```
+
+To insert a CSV structure at a given coordinate in the parent CSV structure, the *insmap* functions can be used.
+```c
+int insmap_cell_into_csv_row(struct csv_row *row, struct csv_cell *cell, int index);
+int insmap_row_into_csv_table(struct csv_table *table, struct csv_row *row, int index);
+int insmap_cell_into_csv_table(struct csv_table *table, struct csv_cell *cell, int rowindx, int colindx);
+```
+The parameters for the function are the parent CSV structure to insert into, the CSV structure to be inserted and the coordinates at which it is inserted. As it is a mapping, the pointer is inserted into the list at the given coordinates.
+```c
+// r1 = ["Cell1", "Apple"]
+struct csv_cell *c3 = new_csv_cell_from_str("Cell3");
+
+insmap_cell_into_csv_row(r1, c3, 1);
+// r1 = ["Cell1", "Cell3", "Apple"]
+```
+
+The return value of the function indicates if the insertion is successful. It returns 0 if it was successful and false otherwise.
+The *insmap* functions can also be used to append mappings to the end of parent CSV structure. This is done by passing in the length of the parent CSV structure as the insertion index.
+```c
+// r1 = ["Cell1", "Cell3", "Apple"]
+struct csv_cell *c4 = new_csv_cell_from_str("Cell4");
+
+insmap_cell_into_csv_row(r1, c4, r1->length);
+// r1 = ["Cell1", "Cell3", "Apple", "Cell4"]
+```
+
+Note that this is the only case where the insmap functions accept a coordinate that is outside of the range of the parent structure's list.
+
+For `insmap_cell_into_csv_table`, if `rowindx` is `table->length` and `colindx` is 0, a new row is created and the cell is placed as the first entry.
+```c
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4"]]
+struct csv_cell *c5 = new_csv_cell_from_str("Cell5");
+
+insmap_cell_into_csv_table(t1, c5, t1->length, 0);
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4"], ["Cell5"]]
+```
+
+If `colindx` is not 0 for this case, the insertion will not be done. Otherwise, `rowindx` is used to get the row at the appropriate index, and `colindx` is used as the insertion index for the retrieved row using `insmap_cell_into_csv_row`.
+```c
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4"], ["Cell5"]]
+struct csv_cell *c6 = new_csv_cell_from_str("Cell6");
+
+insmap_cell_into_csv_table(t1, c6, 1, 2);
+// t1 = [["Cell1", "Cell2"], ["Cell3", "Cell4", "Cell6"], ["Cell5"]]
+```
+
+### Combine Structure Clones
+The previous functions only map the given pointers into the parent structures, meaning that changes to the pointer will affect the parent structure. The below functions clone the structure before mapping it into the specified parent structure.
+
+To add a structure clone to the end of the parent structure (equivalent to `clone.* `and `map.*`):
+```c
+void add_cell_clone_to_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
+void add_row_clone_to_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
+```
+
+To insert a structure at a specific coordinate in the parent structure ( equivalent to `clone.*` and `insmap.*`):
+```c
+int insert_cell_clone_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr, int index);
+int insert_row_clone_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr, int index);
+int insert_cell_clone_into_csv_table(struct csv_table *tableptr, struct csv_cell *cellptr, int rowindx, int colindx);
+```
+
+The return types are the same as the insmap functions.
+
+### Combine String into Structures
+The add and insertion functions are also available for strings alone. These functions create a new cell for the string and place them in the parent structure appropriately.
+```c
+int add_str_to_csv_row(struct csv_row *rowptr, char * string);
+int insert_str_into_csv_row(struct csv_row *rowptr, char *string, int index);
+int insert_str_into_csv_table(struct csv_table *tableptr, char *string, int rowindx, int colindx);
+```
+
+## Separate and Delete CSV Structures
+### Pop CSV Structures
+Cells/rows can be popped from their parent rows/tables using the *pop* functions.
+```c
+struct csv_cell * pop_cell_from_csv_row(struct csv_row * row, int index);
+struct csv_row * pop_row_from_csv_table(struct csv_table * table, int index);
+struct csv_cell * pop_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx);
+```
+
+The functions take the coordinates of a structure in the parent structure. If the coordinates the valid, the structure at that location is removed from the list of the parent structure and pointer to it is returned. If the coordinates are invalid, a NULL pointer is returned.
+```c
+// r1 = ["Cell1", "Cell3", "Apple", "Cell4"]
+struct csv_cell *apple_cell = pop_cell_from_csv_row(r1, 2);
+
+// r1 = ["Cell1", "Cell3", "Cell4"]
+populate_csv_cell_str(apple_cell, "Orange"); // apple_cell = "Orange"
+                                             // r1 = ["Cell1", "Cell3", "Cell4"]
+```
+
+### Delete CSV Structures
+CSV Structures can also be deleted from their parent structures using the *delete* functions.
+```c
+void delete_cell_from_csv_row(struct csv_row *row, int index);
+void delete_row_from_csv_table(struct csv_table *table, int index);
+void delete_cell_from_csv_table(struct csv_table *table, int rowindx, int colindx);
+```
+
+These functions perform a *pop* and *free* for the structures at the specified coordinates.
+
+## Compare CSV Structures
+The contents of CSV structures can be compared using the *equals* functions.
+```c
+int csv_cell_equals(struct csv_cell *cell1, struct csv_cell *cell2);
+int csv_row_equals(struct csv_row *row1, struct csv_row *row2);
+int csv_table_equals(struct csv_table *table1, struct csv_table *table2);
+```
+
+These functions return TRUE if the contents of the CSV structures being compared are the same. The below code shows the results of the comparison for a variety of CSV cells.
+```c
+struct csv_cell *c1 = new_csv_cell_from_str("Apple");
+struct csv_cell *c2 = new_csv_cell_from_str("Banana");
+struct csv_cell *c3 = new_csv_cell_from_str("Apple");
+struct csv_cell *c4 = new_csv_cell_from_str("");
+struct csv_cell *c5 = new_csv_cell();
+struct csv_cell *c6 = NULL;
+struct csv_cell *c7 = NULL;
+
+csv_cell_equals(c1, c3); // TRUE (1)
+csv_cell_equals(c1, c2); // FALSE (0)
+csv_cell_equals(c1, c4); // FALSE
+
+csv_cell_equals(c4, c5); // FALSE
+csv_cell_equals(c4, c6); // FALSE
+
+csv_cell_equals(c5, c6); // FALSE
+csv_cell_equals(c6, c7); // TRUE
+```
+
+For structures that have structure lists (CSV rows and tables), the lists must have the same content in the same order.
+```c
+// r1 = ["Cell1", "Cell3", "Cell4"]
+// r2 = ["Cell1", "Cell3", "Cell4"]
+// r3 = ["Cell4", "Cell3", "Cell1"]
+// r4 = ["Cell1"]
+// r5 = []
+// r6 = NULL
+
+csv_row_equals(r1, r2); // TRUE
+csv_row_equals(r1, r3); // FALSE
+csv_row_equals(r1, r4); // FALSE
+csv_row_equals(r1, r5); // FALSE
+
+csv_row_equals(r5, r6); // FALSE
+```
+
+## Check for Content in CSV Structures
+The below functions check if the contents of the specified reference structure are in the parent structure.
+```c
+int is_cell_in_csv_row(struct csv_row *row, struct csv_cell *cell);
+int is_row_in_csv_table(struct csv_table *table, struct csv_row *row);
+int is_cell_in_csv_table(struct csv_table *table, struct csv_cell *cell);
+```
+For example, the function `is_cell_in_csv_row` returns TRUE if there is a CSV cell in row that contains the same contents (str field) as cell.
+```c
+// r1 = ["Cell1", "Cell3", "Cell4"]
+struct csv_cell *c1 = new_csv_cell_from_str("Cell1");
+struct csv_cell *c2 = new_csv_cell_from_str("Cell2");
+
+is_cell_in_csv_row(r1, c1); // TRUE
+is_cell_in_csv_row(r1, c2); // FALSE
+```
+
+There are also functions to perform a check if a string is within a CSV structure.
+```c
+int is_string_in_csv_row(struct csv_row *row, char *string);
+int is_string_in_csv_table(struct csv_table *table, char *string);
+```
+
+## Iterate Through Row/Cell Lists
+The functions `has_next_cell` and `has_next_row` are implemented to provide a conditional check when iterating through a structure's list in a for-loop.
+```c
+int has_next_cell(struct csv_row * row, struct csv_cell * cur_cell);
+int has_next_row(struct csv_table * table, struct csv_row * cur_row);
+```
+
+These are intended to be used in the case where the for-loop has to go through every element and the resulting implementation is more similar to a for-each loop.
+```c
+// r1 = ["Cell1", "Cell3", "Cell4"]
+
+// Initialization: Set cur_cell to beginning of list
+// Conditional: has_next_cell with parent structure and current value iterator
+// Incrementation: Set cur cell to the next cell
+
+for( struct csv_cell *cur_cell=r1->list_head; has_next_cell(r1, cur_cell); cur_cell=cur_cell->next ){
+	printf("%s\n", cur_cell->str);
+}
+```
+
+If specific behaviour needs to be done with the tail of the list, a simple while loop can be done.
+```c
+// r1 = ["Cell1", "Cell3", "Cell4"]
+struct csv_cell *cur_cell = r1->list_head;
+
+while ( cur_cell != NULL && cur_cell->next != NULL ){
+
+	printf("%s, ", cur_cell->str);
+
+	cur_cell = cur_cell->next;
+}
+
+if ( r1->list_tail != NULL ){
+	printf("%s\n", r1->list_tail->str);
+}
+```
+
+This functionality applies to rows within tables as well.
+```c
+int total_cells = 0;
+for ( struct csv_row *cur_row=table->list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
+	total_cells += cur_row->length;
+}
+
+printf("Table has %d cells\n", total_cells);
+```
+
+# Evaluation
+## Big O-Runtime
+The CSV parser and its associated data structure functions all operate on average/worst case `O(n)`. There are multiple cases gone through in the below paragraphs
+
+### Parsing CSV
+There are two cases, in both of which the parser results in `O(n)`. (Calculations are based on the behaviour of the base parser function `parse_fileptr_or_char_array_to_csv_table`).
+
+Case 1: No cell merges need to happen. Case for parsing string or `fgets` has entire CSV row in its buffer.
+
+For a given word of length `n`, we traverse the buffer n times to find the word delimiter ⸫ `O(n)`.
+The word is copied from the buffer into the allocated cell:
+
+`O(1)` for cell allocation
+
+`O(n)` for word copy (copied character by character)
+
+For one word: `O(n) + O(n) + O(1) = O(2n) + O(1)`.
+
+This scales to the other words in the buffer: `O(2n) + O(1) ≅ O(n)`
+
+
+Case 2: Cell merges happen (`fgets` does not have entire CSV row in the buffer).
+
+In the worst case where a word is split across two buffers from `fgets`, it will have to be merged. To perform this:
+
+`O(n)` to traverse buffer and find delimiter of first part of the word
+
+`O(n) + O(1)` to copy the first part of the word into an allocated cell
+
+`O(n)` to traverse the new buffer and find delimiter and therefore second part of the word
+
+`O(n) + O(n) + O(1)` to copy the first part of the word and the second part of the word to a new cell that has the combined string
+
+`O(1)` to delete old cell from the table.
+
+`O(n) + O(n)` to strip combined string of quotes and spaces
+
+`O(n +  n + 1 + n +  n + n + 1 +  1 +  n + n) = O(7n + 1) = O(7n) ≅ O(n) `
+
+
+### Sequential Access
+### Inserting Structures
+### Checking for Content
