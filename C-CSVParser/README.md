@@ -1,5 +1,5 @@
 # C CSV Parser Documentation
-## Overview
+# Overview
 The included files provide functions to parse CSV (or other character separated) files and/or strings into an accessible structure in the C programming language. The underlying parsed structures make use of doubly linked lists and are allocated on the heap of the running program.
 
 The reason I wrote this CSV parser for C is its ease of access. While there are several other CSV parsers available, I could not find anyone that was as convenient as calling a function on a string or filename parameter and the parsed CSV structure being returned. Most of the parsers I found were more complicated than what I needed.
@@ -14,7 +14,7 @@ The parser testing process and possible limitations are discussed in Testing and
 
 **For a PDF version of documentation: see [doc/CSVParserDoc.pdf](/C-CSVParser/doc/CSVParserDoc.pdf)**
 
-## Basic Tutorial
+# Basic Tutorial
 Once the header file and the implementation file are included in your project, CSV files and strings can be parsed using the following functions:
 ```c
 struct csv_table * parse_string_to_csv_table(char * string, char delim, char quot_char, int strip_spaces, int discard_empty_cells);
@@ -45,3 +45,44 @@ The structure is designed to mirror the table layout in the unparsed CSV. The le
 Functions are provided to get a row/cell at a specific row and column index (see Get CSV Structures and Coordinates).
 
 The parsed CSV structure is allocated on the heap and therefore must be freed manually. The header files include free functions for each of the CSV structures to make sure all allocated memory is freed (see Free CSV Structures).
+
+# In-depth Tutorial
+## Create CSV Structures
+CSV structures can be created in code using the *new_csv* functions.
+
+### Create CSV Cells
+A new CSV cell can be created using the following:
+
+```c
+// Create CSV cell with no string value
+struct csv_cell *c1 = new_csv_cell();
+
+// Create a cell with a string value
+struct csv_cell *c2 = new_csv_cell_from_str("ACell2");
+```
+
+CSV cells can have their `str` field populated/overwritten with a string value using `populate_csv_cell_str`. If the `str` field already has a value, the function will free the current value and write in the string passed in.
+
+```c
+// Populate c1 with string
+populate_csv_cell_str(c1, "Cell1");
+
+// Overwrite value in c2
+populate_csv_cell_str(c2, "Cell2");
+```
+
+### Create CSV Rows
+New CSV rows can be created with the `new_csv_row`.
+```c
+struct csv_row *r1 = new_csv_row();
+```
+
+### Create CSV Tables
+New CSV tables can be created with `new_csv_table`.
+```c
+struct csv_table *t1 = new_csv_table();
+```
+
+## Clone CSV Structures
+
+
