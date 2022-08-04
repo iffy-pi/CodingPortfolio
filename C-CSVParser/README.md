@@ -1,0 +1,1 @@
+![Alt text](/C-CSVParser/doc/csv_structure_diagram.png?raw=true "CSV Structure Diagram")
