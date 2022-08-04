@@ -8,7 +8,7 @@ This CSV parser parses the input file or string and returns the parsed structure
 
 This documentation is intended to provide information on how to use the provided CSV parser.
 
-The parser testing process and possible limitations are discussed in Testing and Evaluation respectively.
+The parser testing process and possible limitations are discussed in Testing and Verification and Evaluation respectively.
 
 [Link text Here](https://link-url-here.org)
 
@@ -528,7 +528,7 @@ The CSV parser and its associated data structure functions all operate on averag
 ### Parsing CSV
 There are two cases, in both of which the parser results in `O(n)`. (Calculations are based on the behaviour of the base parser function `parse_fileptr_or_char_array_to_csv_table`).
 
-Case 1: No cell merges need to happen. Case for parsing string or `fgets` has entire CSV row in its buffer.
+**Case 1: No cell merges need to happen. Case for parsing string or `fgets` has entire CSV row in its buffer.**
 
 For a given word of length `n`, we traverse the buffer n times to find the word delimiter ⸫ `O(n)`.
 The word is copied from the buffer into the allocated cell:
@@ -542,7 +542,7 @@ For one word: `O(n) + O(n) + O(1) = O(2n) + O(1)`.
 This scales to the other words in the buffer: `O(2n) + O(1) ≅ O(n)`
 
 
-Case 2: Cell merges happen (`fgets` does not have entire CSV row in the buffer).
+**Case 2: Cell merges happen (`fgets` does not have entire CSV row in the buffer).**
 
 In the worst case where a word is split across two buffers from `fgets`, it will have to be merged. To perform this:
 
@@ -560,7 +560,86 @@ In the worst case where a word is split across two buffers from `fgets`, it will
 
 `O(n +  n + 1 + n +  n + n + 1 +  1 +  n + n) = O(7n + 1) = O(7n) ≅ O(n) `
 
-
 ### Sequential Access
+Accessing the beginning and end of the list is `O(1)` since there is the list head and tail pointers.
+
+Get CSV Structure functions are designed to start from the end closest to the specified index, therefore worst-case scenario will mean going through` n/2` elements ⸫ `O(n/2) ≅ O(n)`.
+
 ### Inserting Structures
+Appending to the end of the list is `O(1)` since adjusting list_tail and incrementing length is constant time.
+
+The worst case for an insertion: 
+
+In a list of `n` CSV structures, we are inserting the structure at location `n-1`. This would mean traversing past the first `n-1` elements ⸫ `O(n-1)`.
+
+Adjusting the list pointers is `O(1)`.
+
+Worst case: `O(n-1) + O(1) ≅ O(n)`.
+
 ### Checking for Content
+No starting optimization can be made as content to search for can be placed anywhere in the list. Worst case is going through all list elements to find them therefore `O(n)`.
+
+## Possible Limitations
+### Wasted Characters for Stripping Quotes
+The function `malloc_strip_quotes_and_spaces` is designed to remove trailing spaces and unescaped quotes from the string parameter.
+```c
+char * malloc_strip_quotes_and_spaces(char  *string, int len, char quot_char, int strip_quotes, int strip_spaces, int free_string);
+```
+The sanitized string is allocated on the heap and the pointer to the string location is returned. This is used when copying words from the raw string buffer into a CSV cell.
+
+The limitation for the function is that source strings with quotes will have wasted character slots in the sanitized string that will have to be padded with null terminators.
+
+Consider the case for the string `"His ""pretty happy"" dog"`. When the memory for the sanitized string is allocated, it is done for the `strlen(His ""pretty happy"" dog)+1`  (Note starting and ending quotes are have already been removed).
+
+The sanitized string will remove one of the quotes in each quote pair, resulting in `His "pretty happy" dog`. However, the space for the sanitized string is allocated before stripping the extra quotes, resulting in two extra character slots which are padded with null terminators. Therefore, the sanitized string is `His "pretty happy" dog`, but as a char array it is `His "pretty happy" dog\0\0\0` when it could be `His "pretty happy" dog\0`.
+
+With this implementation, there will always be a wasted slot for each quote that must be stripped. To fix this, new memory can be allocated for the sanitized string using its actual string length and the string is copied into the new memory without the extra null terminators. This new memory will be what is returned, and the initial allocation will be freed.
+
+The decision was made to maintain the current implementation as the above solution would result in an extra character iteration to be done on every word that needs to be stripped. This would introduce an additional time complexity for every word to be parsed, with the benefits only being to words with several quotes. The additional time complexity for the solution was determined to be of more detriment than the additional space complexity incurred by wasting characters.
+
+Perhaps a future iteration can introduce a flag to be able to control if the string should be doubly sanitized to remove the wasted space.
+
+# Testing and Verification
+## Testing Process and How to Run.
+The parser was tested using the various input files in [testing/inputs](/C-CSVParser/testing/inputs).
+
+The input files were sourced from the GitHub repository: https://github.com/maxogden/csv-spectrum but also includes other added files.
+
+The parser output was compared to the output of the parser included in the python csv module. This was done by running the C parser and python parser on the same input file, formatting the output of the python parser to match the content format printed using `print_csv_table` and performing a string comparison.
+
+To run the test on your local system, follow the below steps.
+
+1. Compile [testing/testparser.c](/C-CSVParser/testing/testparser.c) to testing/testparser.out.
+2. Run the python script [testing/testingparser.py](/C-CSVParser/testing/testingparser.py) in the directory [testing/](/C-CSVParser/testing/).
+
+*Note: The python script only prints the results failed test cases, to print all test cases. Use the flag `--all-tests` to print the results of all test cases. The flag `--print-files` can be used to print the contents of the input CSV files and the result.*
+
+**Note: The starting and ending quotes are added in the printed format and are not part of the cell string.**
+
+## Test Results
+
+The only differing case from the python parser is for the file [inputs/my_escaped_quotes.csv](/C-CSVParser/testing/inputs/my_escaped_quotes.csv):
+```
+"ha """ha""" ha"
+```
+The python parser returned the result:
+```
+[["ha "ha""" ha""]]
+```
+The C parser returned the result:
+```
+[["ha "ha" ha"]]
+```
+
+The C parser stripped the starting and ending quotes from the input string and also stripped two out of the three quotation marks within it.
+
+This is because the parser removes quotation marks that are not escaped. To escape a quotation mark, there must be a preceding quotation mark that is not used to escape another quotation mark.
+```
+"a" -> a
+""a" -> a"
+""a"" -> "a"
+""""a"""" -> ""a"" 
+```
+
+In this case, the parser counted the first two quotations as an escaped quotation and therefore added it to the final string. The third quotation was not escaped since the previous quotation is already part of an escaped pair and was therefore stripped from the final string.
+To see the raw code on how quotations are stripped, see `malloc_strip_quotes_and_spaces` in [csvparser.c](/C-CSVParser/csvparser.c) 
