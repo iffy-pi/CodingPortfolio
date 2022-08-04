@@ -10,10 +10,6 @@ This documentation is intended to provide information on how to use the provided
 
 The parser testing process and possible limitations are discussed in Testing and Verification and Evaluation respectively.
 
-[Link text Here](https://link-url-here.org)
-
-**For a PDF version of documentation: see [doc/CSVParserDoc.pdf](/C-CSVParser/doc/CSVParserDoc.pdf)**
-
 # Basic Tutorial
 Once the header file and the implementation file are included in your project, CSV files and strings can be parsed using the following functions:
 ```c
