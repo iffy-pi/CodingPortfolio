@@ -254,7 +254,7 @@ For a passed in CSV structure, the provided functions return the coordinates to 
 int get_cell_coord_in_csv_row(struct csv_row *row, struct csv_cell *cell);
 int get_row_coord_in_csv_table(struct csv_table *table, struct csv_row *row);
 ```
-For example, consider the CSV row r1 which is` ["Cell1", "Cell2"]`. We can get the index of the cell that contains the string `"Cell1"` using the following.
+For example, consider the CSV row r1 which is `["Cell1", "Cell2"]`. We can get the index of the cell that contains the string `"Cell1"` using the following.
 ```c
 struct csv_cell *search_cell = new_csv_cell_from_str("Cell1");
 int index = get_cell_coord_in_csv_row(r1, search_cell); // index is 0
