@@ -45,9 +45,7 @@ Functions are provided to get a row/cell at a specific row and column index (see
 The parsed CSV structure is allocated on the heap and therefore must be freed manually. The header files include free functions for each of the CSV structures to make sure all allocated memory is freed (see Free CSV Structures).
 
 # Examples
-- Parsing a CSV string and using it in a function
-- TBD
-- Parsing customer info CSV.
+- [Parsing and Searching A CSV File/](/C-CSVParser/examples/parsing_customer_info.c)
 
 # In-depth Tutorial
 ## Create CSV Structures
