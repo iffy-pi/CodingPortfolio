@@ -4,7 +4,7 @@ if "%main_script%" EQU "" echo No main script! & goto :eof
 set "main_script=%main_script:.c=%"
 echo ==================================================================
 echo Compiling csvparser.c
-gcc -c ../csvparser.c
+gcc -c ../release/csvparser.c
 echo ==================================================================
 echo Compiling %main_script%.c
 gcc -c %main_script%.c
