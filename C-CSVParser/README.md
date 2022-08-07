@@ -624,6 +624,16 @@ The decision was made to maintain the current implementation as the above soluti
 
 A future iteration can introduce a flag to be able to control if the string should be doubly sanitized to remove the wasted space.
 
+### Limitations of C and Possible Extension in C++
+The C programming language does not have objects, classes, or polymorphism. As a result, functions retrieving nested CSV structures or strings must specify the parent CSV structure as a parameter in addition to the other required parameters. This resulted in several 'duplicate' functions. That is, functions that are copied and minimally modified for a different CSV structure. The duplicate functions must each have a distinct name which makes them harder to remember intuitively and contributes to code bloat.
+
+Using an object-oriented programming language, CSV structures can be implemented as objects with their own methods. These methods will have the same name across all structures, hence making it more intuitive.
+
+C++ would be an excellent language to extend the core of this CSV parser. It provides objects and classes which can be used to reduce the code bloat as previously mentioned. The C++ objects also provide constructors and destructors for heap allocated objects, meaning that the allocation and de-allocation of structure memory can be done implicitly.
+
+ It also provides the `vector` class which can replace the doubly linked list used for a dynamically sizable array. C++ also provides a pre-defined `String` class which will eliminate the several functions designed to allocate, copy and de-allocate strings in the CSV structure.
+
+
 # Testing and Verification
 ## Testing Process and How to Run.
 The parser was tested using the various input files in [testing/inputs](/C-CSVParser/testing/inputs).
