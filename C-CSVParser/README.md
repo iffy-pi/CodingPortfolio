@@ -10,6 +10,8 @@ This documentation is intended to provide information on how to use the provided
 
 The parser testing process and possible limitations are discussed in Testing and Verification and Evaluation respectively.
 
+Release (stable) versions of the file can be found in [release/](/C-CSVParser/release/). 
+
 # Basic Tutorial
 Once the header file and the implementation file are included in your project, CSV files and strings can be parsed using the following functions:
 ```c
