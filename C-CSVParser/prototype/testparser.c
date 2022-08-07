@@ -1,4 +1,4 @@
-#include "..\release\csvparser.h"
+#include "csvparser.h"
 
 
 int main( int argc, char *argv[],  char *envp[] ){
