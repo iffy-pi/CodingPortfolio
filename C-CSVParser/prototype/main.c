@@ -37,23 +37,10 @@ int main(){
 
 	// fclose(csv_file);
 
-	// struct csv_table *table = open_and_parse_file_to_csv_table("tab_table.txt", '\t', '"', FALSE, TRUE);
+	struct csv_table *table = open_and_parse_file_to_csv_table("..\\testing\\inputs\\addresses.csv", ',', '"', TRUE, TRUE);
 
-	// print_csv_table(table);
+	csv_print_csv_table(table, ',', '"');
 
-	struct csv_row *r1 = new_csv_row();
-	add_str_to_csv_row(r1, "a");
-	add_str_to_csv_row(r1, "b");
-	add_str_to_csv_row(r1, "c");
-	add_str_to_csv_row(r1, "d");
-	add_str_to_csv_row(r1, "e");
-
-
-	print_csv_row(r1);
-
-	struct csv_cell *c = get_cell_ptr_in_csv_row(r1, 2);
-
-	print_csv_cell(c);
 
 
 	return 0;

@@ -422,15 +422,33 @@ void csv_print_csv_row(struct csv_row* row, char delim, char quot_char){
 		return;
 	}
 
-	for(struct csv_cell *cur_cell=row->list_head; has_next_cell(row, cur_cell); cur_cell=cur_cell->next){
+	struct csv_cell *cur_cell = row->list_head;
+	for(int i=0; i < row->length; i++){
+
 		csv_print_csv_cell(cur_cell, quot_char);
-		printf("%c", delim);
+
+		if ( i != row->length-1) printf("%c", delim);
+
+		cur_cell = cur_cell->next;
 	}
 }
 
 
 void csv_print_csv_table(struct csv_table *table, char delim, char quot_char){
+	if ( table == NULL ) {
+		printf("null");
+		return;
+	}
 
+	struct csv_row *cur_row = table->list_head;
+
+	for(int i=0; i < table->length; i++ ){
+		csv_print_csv_row(cur_row, delim, quot_char);
+
+		if ( i != table->length-1) printf("\n");
+
+		cur_row = cur_row->next;
+	}
 }
 
 
