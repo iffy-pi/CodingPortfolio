@@ -528,6 +528,15 @@ struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index){
 
 }
 
+char * get_csv_cell_str_cpy(struct csv_cell *cell){
+	char *string_copy;
+
+	if (cell == NULL || cell->str == NULL ) return NULL;
+
+	mallocstrcpy(&string_copy, cell->str, strlen(cell->str));
+	return string_copy;
+}
+
 struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table * table, int rowindx, int colindx){
 	if( table == NULL ) return NULL;
 

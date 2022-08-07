@@ -45,6 +45,7 @@ The parsed CSV structure is allocated on the heap and therefore must be freed ma
 # Examples
 - Parsing a CSV string and using it in a function
 - TBD
+- Parsing customer info CSV.
 
 # In-depth Tutorial
 ## Create CSV Structures

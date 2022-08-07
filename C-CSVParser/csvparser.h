@@ -80,6 +80,9 @@ struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row *row, int index);
 struct csv_row * get_row_ptr_in_csv_table(struct csv_table *table, int index);
 struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table *table, int rowindx, int colindx);
 
+/* Allocates new memory on the heap and stores a copy of the string stored in the csv_cell */
+char * get_csv_cell_str_cpy(struct csv_cell *cell);
+
 /* Clone cell/row contents at specified index and return pointer to allocated memory */
 struct csv_cell * get_cell_clone_in_csv_row(struct csv_row *row, int index);
 struct csv_row * get_row_clone_in_csv_table(struct csv_table *table, int index);
