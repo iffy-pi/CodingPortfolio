@@ -134,14 +134,15 @@ int insmap_cell_into_csv_row(struct csv_row *row, struct csv_cell *cell, int ind
 int insmap_row_into_csv_table(struct csv_table *table, struct csv_row *row, int index);
 int insmap_cell_into_csv_table(struct csv_table *table, struct csv_cell *cell, int rowindx, int colindx);
 
-/* Add csv cell/row to csv row/table list, uses deep copy (allocates new memory for new rows/cells) */
-void add_cell_clone_to_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
-void add_row_clone_to_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
+/* Clones specified structure and appends them to the end of the list of the parent structure */
+/* equivalent to clone and map */
+void add_cell_to_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
+void add_row_to_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
 
-/* Add but at specific coordinates , same return type as map_to_coord */
-int insert_cell_clone_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr, int index);
-int insert_row_clone_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr, int index);
-int insert_cell_clone_into_csv_table(struct csv_table *tableptr, struct csv_cell *cellptr, int rowindx, int colindx);
+/* Add but at specific coordinates , same return type as insmap */
+int insert_cell_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr, int index);
+int insert_row_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr, int index);
+int insert_cell_into_csv_table(struct csv_table *tableptr, struct csv_cell *cellptr, int rowindx, int colindx);
 
 /* Create new cell with word and add it to end of row, uses deep copy for copying word */
 int add_char_array_to_csv_row(struct csv_row *rowptr, char arr[], int arrlen);

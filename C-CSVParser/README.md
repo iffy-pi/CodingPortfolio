@@ -378,15 +378,15 @@ The previous functions only map the given pointers into the parent structures, m
 
 To add a structure clone to the end of the parent structure (equivalent to `clone.* `and `map.*`):
 ```c
-void add_cell_clone_to_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
-void add_row_clone_to_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
+void add_cell_to_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr);
+void add_row_to_csv_table(struct csv_table *tableptr, struct csv_row *rowptr);
 ```
 
 To insert a structure at a specific coordinate in the parent structure ( equivalent to `clone.*` and `insmap.*`):
 ```c
-int insert_cell_clone_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr, int index);
-int insert_row_clone_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr, int index);
-int insert_cell_clone_into_csv_table(struct csv_table *tableptr, struct csv_cell *cellptr, int rowindx, int colindx);
+int insert_cell_into_csv_row(struct csv_row *rowptr, struct csv_cell *cellptr, int index);
+int insert_row_into_csv_table(struct csv_table *tableptr, struct csv_row *rowptr, int index);
+int insert_cell_into_csv_table(struct csv_table *tableptr, struct csv_cell *cellptr, int rowindx, int colindx);
 ```
 
 The return types are the same as the insmap functions.

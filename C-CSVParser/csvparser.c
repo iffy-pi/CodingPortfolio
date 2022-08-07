@@ -422,7 +422,7 @@ struct csv_table * clone_csv_table(struct csv_table * table){
 
 	struct csv_table * new_table = new_csv_table();
 	for( struct csv_row * cur_row=table->list_head; has_next_row(table, cur_row); cur_row=cur_row->next){
-		add_row_clone_to_csv_table(table, cur_row);
+		add_row_to_csv_table(table, cur_row);
 	}
 
 	return new_table;
@@ -943,27 +943,27 @@ int insmap_cell_into_csv_table(struct csv_table *table, struct csv_cell *new_cel
 
 }
 
-void add_cell_clone_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
+void add_cell_to_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr){
 	struct csv_cell * new_cell = clone_csv_cell(cellptr);
 	map_cell_into_csv_row(rowptr, new_cell);
 }
 
-void add_row_clone_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr){
+void add_row_to_csv_table(struct csv_table * tableptr, struct csv_row * rowptr){
 	struct csv_row * new_row = clone_csv_row(rowptr);
 	map_row_into_csv_table(tableptr, rowptr);
 }
 
-int insert_cell_clone_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index){
+int insert_cell_into_csv_row(struct csv_row * rowptr, struct csv_cell * cellptr, int index){
 	struct csv_cell *new_cell = clone_csv_cell(cellptr);
 	return insmap_cell_into_csv_row(rowptr, new_cell, index);
 }
 
-int insert_row_clone_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index){
+int insert_row_into_csv_table(struct csv_table * tableptr, struct csv_row * rowptr, int index){
 	struct csv_row *new_row = clone_csv_row(rowptr);
 	return insmap_row_into_csv_table(tableptr, new_row, index);
 }
 
-int insert_cell_clone_into_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx){
+int insert_cell_into_csv_table(struct csv_table *tableptr, struct csv_cell * cellptr, int rowindx, int colindx){
 	struct csv_cell *new_cell = clone_csv_cell(cellptr);
 	return insmap_cell_into_csv_table(tableptr, new_cell, rowindx, colindx);
 }
