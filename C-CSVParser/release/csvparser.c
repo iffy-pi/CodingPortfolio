@@ -89,6 +89,15 @@ struct csv_cell * new_csv_cell(){
 	return cellptr;
 }
 
+void populate_csv_cell_str(struct csv_cell * cell, char * string){
+	if ( cell->str != NULL ){
+		free(cell->str);
+	}
+
+	// copy the string with mallocstr copy
+	mallocstrcpy(&(cell->str), string, strlen(string));
+}
+
 struct csv_cell * new_csv_cell_from_str(char * string){
 	struct csv_cell * new_cell = new_csv_cell();
 	populate_csv_cell_str(new_cell, string);
@@ -215,15 +224,6 @@ void free_csv_table(struct csv_table * tableptr){
 	// free the actual row structure
 	free(tableptr);
 	tableptr=NULL;
-}
-
-void populate_csv_cell_str(struct csv_cell * cell, char * string){
-	if ( cell->str != NULL ){
-		free(cell->str);
-	}
-
-	// copy the string with mallocstr copy
-	mallocstrcpy(&(cell->str), string, strlen(string));
 }
 
 void print_csv_cell_w_params(struct csv_cell *cellptr, int print_newline){

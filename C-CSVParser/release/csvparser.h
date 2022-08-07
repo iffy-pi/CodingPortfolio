@@ -45,14 +45,13 @@ char * malloc_strip_quotes_and_spaces(char  *string, int len, char quot_char, in
 
 /* Allocate csv structures on the heap, anything allocated should be deallocated with free functions */
 struct csv_cell * new_csv_cell();
+void populate_csv_cell_str(struct csv_cell *cell, char *string);
 struct csv_cell * new_csv_cell_from_str(char *string);
 struct csv_row * new_csv_row();
 struct csv_table * new_csv_table();
 void free_csv_cell(struct csv_cell *cellptr);
 void free_csv_row(struct csv_row *rowptr);
 void free_csv_table(struct csv_table *tableptr);
-
-void populate_csv_cell_str(struct csv_cell *cell, char *string);
 
 /* Print the contents of a CSV structure */
 void print_csv_cell(struct csv_cell *cellptr );
