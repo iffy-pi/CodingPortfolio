@@ -231,15 +231,37 @@ If the specified index is out of range of the parent CSV structure or the pointe
 
 Note: **The pointer to the CSV structure mapped in the parent structure is returned, meaning any changes made to the pointer's value will affect the parent structure. To get a deep copy, refer to Get Structure Clones.**
 
-#### Get Structure Clones
+#### Get Structure Copies
 The following functions are provided to get the clone of the CSV structure at the specified index.
 ```c
-struct csv_cell * get_cell_clone_in_csv_row(struct csv_row *row, int index);
-struct csv_row * get_row_clone_in_csv_table(struct csv_table *table, int index);
-struct csv_cell * get_cell_clone_in_csv_table(struct csv_table *table, int rowindx, int colindx);
+struct csv_cell * get_cell_from_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_from_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_from_csv_table(struct csv_table *table, int rowindx, int colindx);
 ```
 
-In this case, the pointer returned points to a clone of the CSV structure at the specified coordinates. This means that it is separate from the parent structure it was taken from.
+The functions returns a duplicate of the CSV structure at the specified coordinates. The duplicate structure is separate from the parent structure it was taken from.
+
+### Get String stored in CSV Structures
+The function `clone_csv_cell_str` returns a copy of the string stored in the CSV cell passed in as the parameter.
+```c
+struct csv_cell *c1 = new_csv_cell_from_str("Cell1");
+
+char *c1_init_str = clone_csv_cell_str(c1); // c1_init_str = "Cell1"
+
+populate_csv_cell_str(c1, "Jane"); // c1->str = "Jane"
+                                   // c1_init_str = "Cell1"
+```
+
+If the cell or its `str` field is NULL, a NULL pointer is returned.
+
+There are also functions to get the copy of the string of a CSV cell at a specific coordinate in its parent structure.
+```c
+char * get_str_from_csv_row(struct csv_row *row, int index);
+char * get_str_from_csv_table(struct csv_table *table, int rowindx, int colindx);
+```
+
+They are equivalent to using `get_cell_ptr.*` and then `clone_csv_cell_str` on the returned CSV cell.
+
 
 ### Get CSV Cell for a String
 The functions below are provided to get the pointer to the CSV cell in the row/table whose str field is the same string as the string parameter.

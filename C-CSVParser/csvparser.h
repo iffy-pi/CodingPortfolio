@@ -80,13 +80,17 @@ struct csv_cell * get_cell_ptr_in_csv_row(struct csv_row *row, int index);
 struct csv_row * get_row_ptr_in_csv_table(struct csv_table *table, int index);
 struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table *table, int rowindx, int colindx);
 
-/* Allocates new memory on the heap and stores a copy of the string stored in the csv_cell */
-char * get_csv_cell_str_cpy(struct csv_cell *cell);
+/* Returns a duplicate of the string stored in the CSV cell */
+char * clone_csv_cell_str(struct csv_cell *cell);
 
-/* Clone cell/row contents at specified index and return pointer to allocated memory */
-struct csv_cell * get_cell_clone_in_csv_row(struct csv_row *row, int index);
-struct csv_row * get_row_clone_in_csv_table(struct csv_table *table, int index);
-struct csv_cell * get_cell_clone_in_csv_table(struct csv_table *table, int rowindx, int colindx);
+/* Returns a duplicate of the csv structure at the specified coordinates. */
+struct csv_cell * get_cell_from_csv_row(struct csv_row *row, int index);
+struct csv_row * get_row_from_csv_table(struct csv_table *table, int index);
+struct csv_cell * get_cell_from_csv_table(struct csv_table *table, int rowindx, int colindx);
+
+/* Returns a duplicate of the string stored in the csv cell, returns NULL if invalid index */
+char * get_str_from_csv_row(struct csv_row *row, int index);
+char * get_str_from_csv_table(struct csv_table *table, int rowindx, int colindx);
 
 /* Gets the pointer to the cell in the specified row/table that contains the string, returns NULL if no match is found */
 struct csv_cell * get_cell_for_str_in_csv_row(struct csv_row *row, char *string);

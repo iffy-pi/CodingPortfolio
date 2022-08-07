@@ -528,7 +528,7 @@ struct csv_row * get_row_ptr_in_csv_table(struct csv_table * table, int index){
 
 }
 
-char * get_csv_cell_str_cpy(struct csv_cell *cell){
+char * clone_csv_cell_str(struct csv_cell *cell){
 	char *string_copy;
 
 	if (cell == NULL || cell->str == NULL ) return NULL;
@@ -549,24 +549,39 @@ struct csv_cell * get_cell_ptr_in_csv_table(struct csv_table * table, int rowind
 
 }
 
-struct csv_cell * get_cell_clone_in_csv_row(struct csv_row * row, int index){
+struct csv_cell * get_cell_from_csv_row(struct csv_row * row, int index){
 	struct csv_cell * ref = get_cell_ptr_in_csv_row(row, index);
 
 	if ( ref != NULL ) return clone_csv_cell(ref);
 	return NULL;
 }
 
-struct csv_row * get_row_clone_in_csv_table(struct csv_table * table, int index){
+struct csv_row * get_row_from_csv_table(struct csv_table * table, int index){
 	struct csv_row * ref = get_row_ptr_in_csv_table(table, index);
 
 	if ( ref != NULL ) return clone_csv_row(ref);
 	return NULL;
 }
 
-struct csv_cell * get_cell_clone_in_csv_table(struct csv_table * table, int rowindx, int colindx){
+struct csv_cell * get_cell_from_csv_table(struct csv_table * table, int rowindx, int colindx){
 	struct csv_cell * ref = get_cell_ptr_in_csv_table(table, rowindx, colindx);
 
 	if ( ref != NULL ) return clone_csv_cell(ref);
+	return NULL;
+}
+
+
+char * get_str_from_csv_row(struct csv_row *row, int index){
+	struct csv_cell *ref = get_cell_ptr_in_csv_row(row, index);
+
+	if ( ref != NULL ) return clone_csv_cell_str(ref);
+	return NULL;
+}
+
+char * get_str_from_csv_table(struct csv_table *table, int rowindx, int colindx){
+	struct csv_cell *ref = get_cell_ptr_in_csv_table(table, rowindx, colindx);
+
+	if ( ref != NULL ) return clone_csv_cell_str(ref);
 	return NULL;
 }
 
