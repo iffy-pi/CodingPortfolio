@@ -1,0 +1,4 @@
+dog,cat,               apple,me,you ,jane
+a                                 
+doe,set,p lut   ,   form   ,karate  ,kac  
+foe ed,da sa,f f rf,e ,fef,,ef44
