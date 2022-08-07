@@ -63,6 +63,11 @@ void pretty_print_csv_row(struct csv_row *rowptr);
 void pretty_print_csv_table(struct csv_table *tableptr);
 void super_pretty_print_csv_table(struct csv_table *tableptr);
 
+/* Print structures in CSV format */
+void csv_print_csv_cell(struct csv_cell* cell, char quot_char);
+void csv_print_csv_row(struct csv_row* row, char delim, char quot_char);
+void csv_print_csv_table(struct csv_table *table, char delim, char quot_char);
+
 
 /* Performs a deep copy of the specified parameters and returns a pointer to the new object */
 struct csv_cell * clone_csv_cell(struct csv_cell *cell);

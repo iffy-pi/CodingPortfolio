@@ -389,6 +389,52 @@ void super_pretty_print_csv_table(struct csv_table *tableptr){
 	printf("]\n");
 }
 
+void csv_print_csv_cell(struct csv_cell* cell, char quot_char){
+	if ( cell == NULL || cell->str == NULL ) {
+		printf("(null)");
+		return;
+	}
+
+	// check for any spaces so we know to quote it
+	// bad because we have to go through it again to actually print the stuff
+	int str_has_spaces = FALSE;
+	for( int i=0; cell->str[i] != '\0' && !str_has_spaces; i++ )
+		str_has_spaces = ( cell->str[i] == ' ');
+
+	// print the cell using the quotations if it has spaces
+	if ( str_has_spaces )
+		printf("%c", quot_char);
+
+	for(int i=0; cell->str[i] != '\0'; i++){
+		if ( cell->str[i] == quot_char ) printf("%c", quot_char);
+		printf("%c", cell->str[i]);
+	}
+
+	if ( str_has_spaces )
+		printf("%c", quot_char);
+
+}
+
+
+void csv_print_csv_row(struct csv_row* row, char delim, char quot_char){
+	if ( row == NULL ) {
+		printf("null");
+		return;
+	}
+
+	for(struct csv_cell *cur_cell=row->list_head; has_next_cell(row, cur_cell); cur_cell=cur_cell->next){
+		csv_print_csv_cell(cur_cell, quot_char);
+		printf("%c", delim);
+	}
+}
+
+
+void csv_print_csv_table(struct csv_table *table, char delim, char quot_char){
+
+}
+
+
+
 
 struct csv_cell * clone_csv_cell(struct csv_cell * cell){
 	if ( cell == NULL ) return NULL;
