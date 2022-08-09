@@ -13,5 +13,11 @@ core
 # doc temp files
 ~$*
 *.tmp
+
 #vs code directory
 .vscode
+.vs
+
+#Debug and release directories
+Debug/
+Release/
