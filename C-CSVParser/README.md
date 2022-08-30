@@ -1,4 +1,5 @@
 # C CSV Parser Documentation
+
 # Overview
 The included files provide functions to parse CSV (or other character separated) files and/or strings into an accessible structure in the C programming language. The underlying parsed structures make use of doubly linked lists and are allocated on the heap of the running program.
 
