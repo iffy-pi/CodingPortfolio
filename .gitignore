@@ -21,3 +21,6 @@ core
 #Debug and release directories
 Debug/
 Release/
+
+#Python Cachee
+__pycache__
