@@ -377,7 +377,7 @@ def main():
         "-save_to",
         required=True,
         type=str,
-        metavar='<password>',
+        metavar='<address>',
         help='Location to save generated reports, is file address for one report '
     )
 
@@ -385,7 +385,7 @@ def main():
         "-type",
         required=False,
         type=str,
-        metavar='<password>',
+        metavar='<string>',
         help=report_type_help_str()
     )
 
