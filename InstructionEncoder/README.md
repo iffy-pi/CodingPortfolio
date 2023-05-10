@@ -1,6 +1,0 @@
-# Instruction Encoder
-ELEC 374 is a course offered at Queen's University that teaches the core fundamentals of the components of digital systems (https://www.ece.queensu.ca/undergraduate/courses/elec-374.html). The course includes a CPU Design Project, where students are to design a 'virtual' or simulated CPU using Quartus II Software.
-
-To test the CPU, encoded instructions were fed into the system and its behaviour was observed. However, these instructions needed to be encoded from their string versions by hand. While this is a part of the learning process, it can get extremely tedious when multiple instructions need to be encoded.
-
-`374_instruction_encoder.jar` was designed to automate the instruction encoding. It is a Java GUI program that allows the encoding of multiple string instructions into thier hex or binary encodings. The GUI also supports the addition of comments to the encoded output. It was designed to match the specifications for the CPU Instructions as found in `CPU_Specifications.pdf`.

@@ -1,5 +1,0 @@
-cat	dog	mitch	cart
-an apple	its really good	i love apples
-"This is going ""	"" to have a tab"	now its a new tab	
-We are using a comma,	set torr
-   This has leading spaces	  also has leading spaces	  leading and trailing   

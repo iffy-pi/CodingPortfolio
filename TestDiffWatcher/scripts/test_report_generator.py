@@ -267,7 +267,11 @@ def gen_result_set_in_one_report(n, faddr, all_clear_skies=False, all_cloudy=Fal
             blood_bath = ( opt == blood_bath_opt )
             cloudy = ( opt == cloudy_opt )
 
-        test_results = [[ '', 0, 0, 0, 0, 0],[ '', 0, 0, 0, 0, 0],[ 'Opt: {}'.format(opt), 0, 0, 0, 0, 0]] + gen_random_results(clear_skies=clear_skies, cloudy=cloudy, blood_bath=blood_bath)
+        test_results = [
+            [ '', 0, 0, 0, 0, 0],
+            [ '', 0, 0, 0, 0, 0], # these two are zero test results rows, serving to add padding between each test result set
+            [ 'Opt: {}'.format(opt), 0, 0, 0, 0, 0] # The title of the option is the row before the test resultds start
+            ] + gen_random_results(clear_skies=clear_skies, cloudy=cloudy, blood_bath=blood_bath) # generate the random results and append them to the table
 
         #add each result to the html table
         update_results_table(test_results, base_soup)
